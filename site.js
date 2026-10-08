@@ -5,7 +5,7 @@
      switch is on but the browser has not let audio start yet, the lamp blinks and the label says to click anywhere.
    - where each sound plays: scanner beep on project cards and primary buttons, forklift beeper on a rack or tag filter,
      switch clack on either switch, the rubber stamp carried across internal links, the conveyor bed while the hero
-     or the footer belt is on screen, a soft scanner beep on hovering a card or tag and a tick on buttons, chips and nav
+     or the footer belt is on screen, a soft scanner beep on hovering a card or tag, a door reader on the access pass, a trolley roll while scrolling and a location scan as each section heading arrives and a tick on buttons, chips and nav
      links (mouse only). The canvas scenes ask for their own cues (viz.js).
    - page transitions: cross-document view transitions where the browser has them (site.css), otherwise a short leave
      animation on internal links; state is restored on pageshow when a page comes back from the bfcache
@@ -87,11 +87,35 @@
     var S = snd(), t = e.target;
     if (!S || e.pointerType !== "mouse" || !t || !t.closest) return;
     if (performance.now() - lastScroll < 250) return; /* the page moved under a resting pointer, that is not a hover */
-    var small = t.closest("button, .chip, nav.top ul a, .btn, .back, .allposts, .more, .qcbtn, .pn a"), big = t.closest(".slot, .qctag, .feat, .post");
+    var small = t.closest("button, .chip, nav.top ul a, .btn, .back, .allposts, .more, .qcbtn, .pn a"), big = t.closest(".slot, .qctag, .feat, .post"), pass = t.closest(".idpass");
     var rel = e.relatedTarget;
     if (small && !(rel && small.contains(rel))) S.cue("tick");
     else if (big && !(rel && big.contains(rel))) S.cue("scan");
+    else if (pass && !(rel && pass.contains(rel))) S.cue("badge");
   }, { passive: true });
+
+  /* ---------- scroll sounds: the trolley rolls while the page moves, and each section label is scanned once ---------- */
+  (function () {
+    var lastY = window.scrollY, lastT = performance.now(), v = 0, idle = null;
+    window.addEventListener("scroll", function () {
+      var S = snd(); if (!S || !S.roll) return;
+      var now = performance.now(), dt = Math.max(8, now - lastT), dy = Math.abs(window.scrollY - lastY);
+      lastY = window.scrollY; lastT = now;
+      v = v * .6 + (dy / dt * 1000) * .4;                 /* px per second, smoothed */
+      S.roll(Math.min(1, v / 2600));
+      clearTimeout(idle); idle = setTimeout(function () { v = 0; S.roll(0); }, 140);
+    }, { passive: true });
+    if (!("IntersectionObserver" in window)) return;
+    var seen = [];
+    var zio = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (!e.isIntersecting || seen.indexOf(e.target) >= 0) return;
+        var S = snd();
+        if (S && S.cue && S.cue("zone")) seen.push(e.target); /* only counts as scanned once it was heard */
+      });
+    }, { threshold: .6 });
+    [].forEach.call(document.querySelectorAll(".shead, .end h2"), function (el) { zio.observe(el); });
+  })();
 
   /* ---------- page transitions ---------- */
   /* cross-document view transitions are CSS only (site.css); the fallback below is for browsers without them */

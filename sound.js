@@ -23,6 +23,10 @@
      settle     a floor carton set down at its node
      tap        hover: a soft cardboard tap on a project card, certificate tag or the featured card (site.js)
      tick       hover: a tiny tick on buttons, chips and nav links (site.js)
+     scan       hover: a soft scanner beep on a project card, certificate tag, the featured card or a post
+     badge      hover: a door reader accepting the access pass in About
+     zone       a section heading coming into view: the scanner reading a location label, once per section
+   roll(speed)  the scroll trolley: a rolling bed whose level and pitch follow scroll speed, silent when the page stops
    Floor cues are throttled to one per 1.2 s and stay silent while the hero is on screen. Hover cues are throttled to
    one per 50 ms. Each cue is panned by its x position with a StereoPannerNode where the browser has one.
    Every sound is one function (context, destination, startTime, options) so render(name) can play it into an
@@ -32,7 +36,7 @@
   var AC = window.AudioContext || window.webkitAudioContext;
   var ctx = null, master = null, on = false, pendingStamp = false;
   var amb = { hero: false, belt: false }, beds = {}, active = [];
-  var LEVEL = { hero: .32, belt: .14 };
+  var LEVEL = { hero: .32, belt: .14, roll: .3 };
 
   function readPref() { try { return localStorage.getItem("sound") === "on"; } catch (e) { return false; } }
   function savePref(v) { try { localStorage.setItem("sound", v ? "on" : "off"); } catch (e) { } }
@@ -104,6 +108,15 @@
     var buf = c.createBuffer(1, n, sr), d = buf.getChannelData(0);
     for (i = 0; i < n; i++) { var v = rum[i] + tk[i]; if (i < ov) { var f = i / ov; v = v * f + (rum[n + i] + tk[n + i]) * (1 - f); } d[i] = clamp(v, -.5, .5); }
     c.__belt = buf; return buf;
+  }
+  /* the scroll trolley: the conveyor loop sent through a narrower, brighter band. Its level and speed follow how fast the
+     page is scrolled, so scrolling sounds like pushing a cart along the aisle and stopping lets it fall silent */
+  function rollBed(c, d) {
+    var src = c.createBufferSource(), bp = c.createBiquadFilter(), g = c.createGain();
+    src.buffer = beltBuffer(c); src.loop = true; src.playbackRate.value = .8;
+    bp.type = "bandpass"; bp.frequency.value = 900; bp.Q.value = .6;
+    g.gain.value = 0; src.connect(bp); bp.connect(g); g.connect(d); src.start();
+    return { src: src, g: g };
   }
   function bed(c, d, t, name, o) {
     var src = c.createBufferSource(), g = c.createGain(), out = g; src.buffer = beltBuffer(c); src.loop = true;
@@ -181,14 +194,14 @@
   };
   /* caster: a floor carton starts to roll, a soft swelling band with wheel chatter */
   SND.caster = function (c, d, t) {
-    band(c, d, t, .32, .14, 850, .9, .1, .12, 19, .45);
-    band(c, d, t, .32, .1, 320, .7, .12, .1);
+    band(c, d, t, .32, .22, 850, .9, .1, .12, 19, .45);
+    band(c, d, t, .32, .14, 320, .7, .12, .1);
     return .5;
   };
   /* settle: the same carton set down at its node */
   SND.settle = function (c, d, t) {
-    burst(c, d, t, .025, .12, "lowpass", 1400, 500, .7);
-    tone(c, d, t, "sine", 240, 170, .04, .002, .09);
+    burst(c, d, t, .025, .18, "lowpass", 1400, 500, .7);
+    tone(c, d, t, "sine", 240, 170, .04, .002, .13);
     return .1;
   };
   /* tap: hover on a card or tag, a knuckle on cardboard */
@@ -199,6 +212,17 @@
   };
   /* scan: hover on a card or tag, the same scanner as the click beep but short and soft, like aiming it before the scan */
   SND.scan = function (c, d, t) { tone(c, d, t, "sine", 2700, 2700, .045, .003, .15); return .1; };
+  /* zone: a section heading comes into view, the scanner reading a location label: two quick beeps, the second higher */
+  SND.zone = function (c, d, t) { tone(c, d, t, "sine", 2500, 2500, .04, .003, .16); tone(c, d, t + .07, "sine", 3100, 3100, .05, .003, .14); return .2; };
+  /* badge: hover on the access pass in About, a door reader accepting a card: a soft click, then a low and a high tone */
+  SND.badge = function (c, d, t) {
+    burst(c, d, t, .008, .14, "highpass", 2600, 0, .6);
+    tone(c, d, t + .02, "square", 1320, 1320, .06, .004, .045, 2600);
+    tone(c, d, t + .1, "square", 1980, 1980, .09, .004, .05, 3200);
+    return .25;
+  };
+  /* roll, for the level check only: the trolley bed at full scroll speed. Live playback goes through S.roll() */
+  SND.roll = function (c, d, t) { var r = rollBed(c, d); r.g.gain.setValueAtTime(LEVEL.roll, t); r.src.stop(t + 2); return 2; };
   /* tick: hover on a button, chip or link */
   SND.tick = function (c, d, t) {
     burst(c, d, t, .005, .12, "highpass", 3200, 0, .5);
@@ -250,7 +274,7 @@
   S.stamp = function () { if (!on) return false; if (!stampOnce()) { pendingStamp = true; return false; } return true; };
 
   /* cues from the scenes and from hover; sound.js decides whether they play */
-  var CAT = { caster: "floor", settle: "floor", tap: "hover", scan: "hover", tick: "hover" }, GAP = { floor: 1.2, hover: .05, hero: .06 }, lastCat = {};
+  var CAT = { caster: "floor", settle: "floor", tap: "hover", scan: "hover", tick: "hover", badge: "hover", zone: "zone" }, GAP = { floor: .9, hover: .05, hero: .06, zone: .35 }, lastCat = {};
   S.cue = function (name, o) {
     if (!on || !ctx || !SND[name] || !running()) return false;
     var cat = CAT[name] || "hero", key = cat === "hero" ? name : cat; /* hero cues may overlap each other, so they throttle per name */
@@ -267,6 +291,22 @@
     active.forEach(function (a) { if (a.until > now) { try { a.g.gain.cancelScheduledValues(now); a.g.gain.setTargetAtTime(0.0001, now, .04); } catch (e) { } } });
     active = [];
   };
+
+  /* scroll trolley: site.js reports scroll speed from 0 to 1, about every frame while the page moves, and 0 when it stops */
+  var roll = null;
+  S.roll = function (speed) {
+    if (!on || !ctx || !running() || document.hidden) { if (roll) { stopRoll(); } return; }
+    var s = clamp(+speed || 0, 0, 1), now = ctx.currentTime;
+    if (!roll) { if (s <= 0) return; try { roll = rollBed(ctx, master); } catch (e) { return; } }
+    var lvl = LEVEL.roll * (amb.hero ? .5 : 1) * Math.sqrt(s);
+    roll.g.gain.cancelScheduledValues(now); roll.g.gain.setTargetAtTime(s > 0 ? lvl : 0, now, s > 0 ? .05 : .12);
+    roll.src.playbackRate.setTargetAtTime(.75 + .6 * s, now, .08);
+  };
+  function stopRoll() {
+    if (!roll) return; var r = roll; roll = null;
+    try { var now = ctx.currentTime; r.g.gain.cancelScheduledValues(now); r.g.gain.setTargetAtTime(0, now, .08); } catch (e) { }
+    setTimeout(function () { try { r.src.stop(); r.src.disconnect(); r.g.disconnect(); } catch (e) { } }, 600);
+  }
 
   /* ambient beds: site.js says which scene is on screen; the bed runs only while sound is on, the tab is visible and the context runs */
   function applyAmbient() {
@@ -293,7 +333,7 @@
   S.set = function (v, gesture) {
     var was = on; on = !!v; savePref(on);
     if (on) { if (gesture) { ensure(); resume(); } if (!was && gesture) S.clack(); }
-    else { S.stopCues(); applyAmbient(); }
+    else { S.stopCues(); stopRoll(); applyAmbient(); }
     fire("soundchange");
     if (on) applyAmbient();
   };
@@ -319,7 +359,7 @@
   if (on) arrival();
 
   /* page lifecycle: stop the beds and cues when the tab hides or the page is put away; restore when it comes back */
-  document.addEventListener("visibilitychange", function () { if (document.hidden) S.stopCues(); applyAmbient(); });
+  document.addEventListener("visibilitychange", function () { if (document.hidden) { S.stopCues(); stopRoll(); } applyAmbient(); });
   window.addEventListener("pagehide", function () { S.stopCues(); Object.keys(amb).forEach(function (k) { amb[k] = false; }); applyAmbient(); if (ctx && ctx.state === "running") { try { ctx.suspend(); } catch (e) { } } });
   window.addEventListener("pageshow", function (e) { on = readPref(); if (e.persisted) { fire("soundchange"); if (on) { resume(); applyAmbient(); } } });
 
