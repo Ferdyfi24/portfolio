@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "include": ["/project", "/project.html", "/sitemap.xml"],
+  "exclude": []
+}

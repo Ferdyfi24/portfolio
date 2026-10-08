@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Location not found · Ferdy Febrian Iskandar</title>
+<meta name="description" content="This address is not on the rack. Back to the home page or the project rack of Ferdy Febrian Iskandar.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#F26419">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/site.css">
+<script>document.documentElement.classList.add("js")</script>
+</head>
+<body>
+<a class="skip" href="#doc">Skip to content</a>
+<canvas id="floor" data-scene="floor" aria-hidden="true"></canvas>
+
+<nav class="top" aria-label="Main">
+  <div class="wrap">
+    <a class="mark" href="/" aria-label="Ferdy Febrian Iskandar, home"><i>FI</i><span>Ferdy F. Iskandar</span></a>
+    <button class="menu" type="button" aria-expanded="false" aria-controls="navlinks">Menu</button>
+    <ul id="navlinks">
+      <li><a href="/#featured">Featured</a></li>
+      <li><a href="/#projects">Projects</a></li>
+      <li><a href="/#certs">Certificates</a></li>
+      <li><a href="/#process">How I work</a></li>
+      <li><a href="/#writing">Writing</a></li>
+      <li><a href="/#about">About</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="nfmain">
+  <div class="doc" id="doc">
+    <a class="back" href="/">← Back to the home page</a>
+    <div class="nf">
+      <div class="nfloc" aria-label="Location label: not found">
+        <div class="nfhead"><span>Location label</span><span>Status · Empty</span></div>
+        <div class="nfcode"><span class="eyebrow">Rack · Bay · Level</span><b>?-00-0</b></div>
+        <div class="nfbc" data-barcode="LOC-404-NOT-FOUND" aria-hidden="true"></div>
+        <div class="nfbcl" aria-hidden="true">LOC-404-NOT-FOUND</div>
+        <div class="bfoot" aria-hidden="true"></div>
+      </div>
+      <div class="notfound">
+        <span class="eyebrow">Error 404</span>
+        <h1>Location<br><span class="acc">not found.</span></h1>
+        <p>Nothing is stored at this address. The page may have been moved to another slot, or the link is out of date. Every project is still on the rack.</p>
+        <div class="cta"><a class="btn primary" href="/">Home page</a><a class="btn" href="/#projects">The project rack</a><a class="btn" href="/wms.html">WMS case study</a></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer style="margin-top:clamp(64px,9vw,112px)">
+  <canvas class="beltline" data-scene="belt" aria-hidden="true"></canvas>
+  <div class="wrap"><span>© 2026 Ferdy Febrian Iskandar · Jakarta</span><span><a href="https://www.linkedin.com/in/ferdyfebrianiskandar">LinkedIn</a> · <a href="https://github.com/Ferdyfi24">GitHub</a> · <a href="https://medium.com/@iskandarferdy559">Medium</a></span></div>
+</footer>
+
+<div class="panel" role="group" aria-label="Site controls">
+  <button class="sw" id="motion" type="button" aria-pressed="true" aria-label="Motion: animations are on. Press to stop them."><span class="st" aria-hidden="true"></span><span class="lamp" aria-hidden="true"><i></i></span><span class="txt">MOTION ON</span></button>
+  <button class="sw" id="sound" type="button" aria-pressed="false" aria-label="Sound: UI sounds are off. Press to turn them on."><span class="st" aria-hidden="true"></span><span class="lamp" aria-hidden="true"><i></i></span><span class="txt">SOUND OFF</span></button>
+</div>
+<script src="/sound.js"></script>
+<script src="/site.js"></script>
+<script src="/viz.js"></script>
+</body>
+</html>

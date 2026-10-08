@@ -260,20 +260,20 @@
       "title": "Inventory",
       "titleAccent": "replenishment audit",
       "short": "Inventory replenishment audit",
-      "summary": "Demand profile, min and max levels, reorder decisions and warehouse capacity for a distributor.",
+      "summary": "A min/max plan for a five-SKU distributor that scored 100, then an audit of what the plan does to the warehouse.",
       "cardPoints": [
         "Final score **100 / 100**",
-        "Reorder logic carried **60%** of the grade"
+        "Audit: **109 days** over warehouse capacity, **87.6%** fill rate"
       ],
-      "lede": "Demand profile, min and max levels, reorder decisions and warehouse capacity for a distributor, built in Excel for the DQLab x UjiKompetensi hackathon.",
+      "lede": "A min/max replenishment plan for a five-SKU distributor, built in Excel for the DQLab x UjiKompetensi hackathon, then audited against its own output. The plan is arithmetically correct and still overflows the warehouse.",
       "meta": [
         {
           "label": "Stack",
-          "value": "Excel"
+          "value": "Excel formulas, Python to cross-check"
         },
         {
-          "label": "Case",
-          "value": "A daily goods distributor"
+          "label": "Scope",
+          "value": "5 SKUs, 168 order lines, 365 days"
         },
         {
           "label": "Score",
@@ -288,38 +288,97 @@
           "prefix": "",
           "suffix": "/100",
           "comma": false,
-          "label": "final score"
+          "label": "final score, on the third submission"
         },
         {
-          "value": 4,
-          "prefix": "",
-          "suffix": "",
-          "comma": false,
-          "label": "graded tasks"
-        },
-        {
-          "value": 60,
+          "value": 87.6,
           "prefix": "",
           "suffix": "%",
           "comma": false,
-          "label": "of the grade on reorder logic"
+          "label": "unit fill rate the plan delivers"
+        },
+        {
+          "value": 109,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "days the plan needs more space than exists"
         }
       ],
       "problem": {
         "title": "When, how much, and will it fit",
-        "text": "A distributor needs to know when to reorder each item, how much to order, and whether the warehouse can hold what arrives."
+        "text": "The brief: reorder each SKU when stock drops below its min and order back up to its max. Min and max both come from 6-day demand windows, supplier lead time is 3 days, and warehouse capacity is reported but not allowed to block an order."
       },
       "approach": {
-        "title": "Four tasks, one chain",
-        "text": "Profile demand, set minimum and maximum stock levels, decide each reorder from those levels, then check the result against warehouse capacity."
+        "title": "A daily ledger, not a list of events",
+        "text": "A reorder today changes stock in three days, which changes tomorrow's reorder. Written naively that is a circular reference. Laid out as one row per SKU per day, 1,825 rows, every arrival reads the order placed 15 rows above, so the whole year resolves in one pass with no macros. The policy was modelled in Python first, and every computed cell was checked against it before submitting."
       },
       "result": {
-        "title": "100 out of 100",
-        "text": "Full marks on the third submission, with the reorder logic carrying most of the weight."
+        "title": "Full marks, and three problems the grade does not show",
+        "text": "Read as an operator, the same output shows 38 of 168 order lines arriving at an empty shelf, a warehouse above 100% on 109 days with a peak of 122.8% on 8 June, and 5 purchase orders placed while the previous order for the same SKU was still on its way."
       },
-      "detailTitle": "Where the grade",
-      "detailAccent": "came from",
+      "detailTitle": "Min and max,",
+      "detailAccent": "and what they do to the building",
       "details": [
+        {
+          "type": "table",
+          "columns": [
+            "Min (units)",
+            "Max (units)"
+          ],
+          "rows": [
+            [
+              "SKU A",
+              "678",
+              "2,632"
+            ],
+            [
+              "SKU B",
+              "376",
+              "6,570"
+            ],
+            [
+              "SKU C",
+              "358",
+              "1,537"
+            ],
+            [
+              "SKU D",
+              "430",
+              "3,532"
+            ],
+            [
+              "SKU E",
+              "250",
+              "2,357"
+            ]
+          ]
+        },
+        {
+          "type": "cards",
+          "items": [
+            {
+              "title": "No safety stock in the trigger",
+              "text": "The order is only placed after stock has fallen below min, and it lands three days later. Stock goes negative on 113 SKU-days across the year.",
+              "fix": "Reorder point = lead-time demand plus a buffer sized to a service level"
+            },
+            {
+              "title": "Five maxes that do not fit together",
+              "text": "Each max was set from its own SKU's demand. Refilled together they need more than the whole warehouse on 109 days, peaking at 122.8%.",
+              "fix": "Smaller, more frequent orders before any talk of more space"
+            },
+            {
+              "title": "Orders that ignore what is on the way",
+              "text": "The trigger looks at stock on hand only, so 5 orders were placed while an earlier order for the same SKU was still in transit.",
+              "fix": "Trigger on on hand + on order, one extra term"
+            }
+          ]
+        },
+        {
+          "type": "callout",
+          "title": "The first submission scored 17.54.",
+          "text": "Two tasks scored exactly zero: the only two whose cells were entirely formulas. The grader read stored values, and a file written by a script stores formulas with no results. Recalculated, it scored 97.39. The 2.61 points left were 15 cells of 345 that I had rewritten in rows the brief said not to touch. Restored, it scored 100."
+        },
         {
           "type": "bars",
           "items": [
@@ -356,13 +415,13 @@
         "label": "Ask for the case study",
         "url": "https://www.linkedin.com/in/ferdyfebrianiskandar"
       },
-      "note": "The hackathon files are not published. The full case study is available on request."
+      "note": "PT DQLab Distributor Sehari-hari is a fictional company from the brief, and the dataset belongs to DQLab and UjiKompetensi. The fill rate, capacity and duplicate-order findings are my own reading of the output and were not part of the grade. The workbook is not published."
     },
     {
       "slug": "basket",
       "code": "S1-02",
       "rack": "hack",
-      "kind": "DQLab Python Hackathon · 2026",
+      "kind": "DQLab Python Hackathon · May 2026",
       "year": "2026",
       "doc": "picking",
       "title": "Retail",
@@ -373,15 +432,15 @@
         "**42,446** retail transactions analysed",
         "**13** rising-star SKUs, **20** bundling rules"
       ],
-      "lede": "Which SKUs are rising, and which ones sell together, from retail transaction data.",
+      "lede": "Which SKUs are rising, and which ones customers already buy together, from 42,446 retail transactions. Built in Python for the DQLab x UjiKompetensi hackathon Retail Crisis and Recovery.",
       "meta": [
         {
           "label": "Stack",
-          "value": "Python"
+          "value": "Python, pandas, mlxtend"
         },
         {
           "label": "Method",
-          "value": "Association rules"
+          "value": "Moving-average streaks, Apriori"
         },
         {
           "label": "Scale",
@@ -419,7 +478,7 @@
       },
       "approach": {
         "title": "Two passes over the same data",
-        "text": "Growth per SKU to find the rising stars, then association rules over baskets to find products bought together."
+        "text": "Rising stars first: daily sales value per product, smoothed with a 3-day moving average, keeping only products whose average rose for at least 12 days in a row. Then Apriori over receipts to find products bought together, keeping only rules with a lift of 2 or more that include a rising star."
       },
       "result": {
         "title": "A short list to act on",
@@ -433,70 +492,106 @@
           "items": [
             {
               "title": "Rising stars",
-              "text": "SKUs whose sales are growing. These are the ones to keep in stock and give shelf space to first."
+              "text": "A product qualifies when its 3-day moving average of daily sales value goes up for 12 or more days in a row. Growth is measured from the first non-zero average in that streak to its end, and the list is ranked by it.",
+              "fix": "Keep in stock and give shelf space first"
             },
             {
               "title": "Bundles",
-              "text": "Pairs that appear in the same basket more often than chance. These become bundle offers and neighbouring shelf slots."
+              "text": "Receipts become one row each, products become yes or no columns. Apriori keeps itemsets in at least 1% of receipts, and a rule survives when the pair appears together at least twice as often as chance (lift 2 or more) and touches a rising star.",
+              "fix": "Bundle offers and neighbouring shelf slots"
             }
           ]
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Setting",
+            "Why"
+          ],
+          "rows": [
+            [
+              "Moving average",
+              "3 days",
+              "Daily sales are noisy; a short average shows direction without hiding it"
+            ],
+            [
+              "Streak",
+              "12 days or more",
+              "Rising for two weeks is a trend, rising for three days is a promotion"
+            ],
+            [
+              "Support",
+              "1% of receipts",
+              "Pairs rarer than that are not worth a shelf decision"
+            ],
+            [
+              "Lift",
+              "2 or more",
+              "Bought together at least twice as often as chance"
+            ]
+          ]
+        },
+        {
+          "type": "callout",
+          "title": "Why only bundles with a rising star",
+          "text": "A rule between two flat products is true but not useful this month. Tying the bundle to a product that is already growing gives the offer something to ride on."
         }
       ],
       "tags": [
         "Python",
         "pandas",
-        "Association rules",
+        "Apriori",
         "Retail"
       ],
       "link": null,
-      "note": "Hackathon dataset provided by DQLab. Code is not published."
+      "note": "Hackathon dataset provided by DQLab. The code is kept private out of respect for the hackathon; the method is described in full here."
     },
     {
-      "slug": "procurement",
+      "slug": "order-anomaly",
       "code": "S1-03",
       "rack": "hack",
-      "kind": "DQLab SQL Hackathon · 2026",
+      "kind": "DQLab SQL Hackathon · Jun 2026",
       "year": "2026",
       "doc": "po",
-      "title": "Procurement",
+      "title": "Sales order",
       "titleAccent": "anomaly check",
-      "short": "Procurement anomaly check",
-      "summary": "Spotting procurement records that do not fit their regional pattern.",
+      "short": "Sales order anomaly check",
+      "summary": "Finding sales orders that do not fit their own branch of the business, in one SQL query.",
       "cardPoints": [
-        "**509** records across 4 regional groups",
-        "**20 anomalies (3.9%)** flagged by z-score"
+        "**100 / 100**, top 100 finalist, rank **62 of 194**",
+        "**20 anomalies (3.9%)** in 509 orders, beyond 3 standard deviations"
       ],
-      "lede": "Spotting procurement records that do not fit their regional pattern, written in SQL.",
+      "lede": "Finding sales orders whose value does not fit their own branch of the business, written as a single SQL query for a DQLab hackathon.",
       "meta": [
         {
           "label": "Stack",
-          "value": "SQL"
+          "value": "SQL, MySQL 5.7"
         },
         {
           "label": "Method",
-          "value": "Z-score within each region"
+          "value": "3 standard deviations within each branch"
         },
         {
-          "label": "Scale",
-          "value": "509 records"
+          "label": "Score",
+          "value": "100 / 100, rank 62 of 194"
         }
       ],
       "visual": "anom",
-      "visualCaption": "z-score per region · outliers flagged",
+      "visualCaption": "order value per branch · outliers flagged",
       "numbers": [
         {
           "value": 509,
           "prefix": "",
           "suffix": "",
           "comma": false,
-          "label": "procurement records"
+          "label": "sales orders checked"
         },
         {
           "value": 4,
           "prefix": "",
           "suffix": "",
           "comma": false,
-          "label": "regional groups"
+          "label": "top-level branches"
         },
         {
           "value": 20,
@@ -507,42 +602,53 @@
         }
       ],
       "problem": {
-        "title": "Unusual for whom?",
-        "text": "A procurement value that is normal in one region can be unusual in another. One threshold for the whole dataset hides both."
+        "title": "Unusual compared with what?",
+        "text": "An order value that is normal in one branch of the business can be extreme in another. One threshold for the whole dataset flags the big branches for being big and lets real outliers in small ones slip through. And each order is attached to a node somewhere in a tree up to five levels deep, not to its branch directly."
       },
       "approach": {
-        "title": "Judge each record against its peers",
-        "text": "Compute a z-score for every record within its own regional group, then flag the records that sit far outside their group."
+        "title": "Find the branch, then judge the order against it",
+        "text": "Each order climbs the node tree, parent by parent, until it reaches the node that sits directly under the root: that is its branch. Average and population standard deviation are computed per branch, and an order is flagged when it sits more than 3 standard deviations from its branch average, in either direction."
       },
       "result": {
         "title": "A review list, not an accusation",
-        "text": "20 records, 3.9% of the total, flagged for someone to look at first."
+        "text": "20 orders, 3.9% of the total, each with its branch, distance from the average and z-score, plus a count per branch on top. One query, no temporary tables, as the brief required."
       },
-      "detailTitle": "Why",
-      "detailAccent": "per region",
+      "detailTitle": "One query,",
+      "detailAccent": "two answers",
       "details": [
         {
           "type": "cards",
           "items": [
             {
-              "title": "One global threshold",
-              "text": "High-cost regions get flagged for being themselves, and real outliers in low-cost regions slip through."
+              "title": "Walk the tree",
+              "text": "Five self-joins on the node table climb from an order's node toward the root. The first ancestor whose parent is ROOT is the branch.",
+              "fix": "No recursive queries in MySQL 5.7, so the depth is spelled out"
             },
             {
-              "title": "A threshold per region",
-              "text": "Every record is compared with the records around it. What is flagged is unusual where it happened."
+              "title": "Judge within the branch",
+              "text": "Average and standard deviation per branch. Flag anything beyond 3 standard deviations on either side.",
+              "fix": "Unusual where it happened, not unusual overall"
+            },
+            {
+              "title": "Summary and detail together",
+              "text": "A UNION ALL returns the count of anomalies per branch and every flagged order with its z-score, in one result set sorted by branch.",
+              "fix": "The brief asked for a single query"
             }
           ]
+        },
+        {
+          "type": "code",
+          "text": "-- the flag, per branch\nWHERE t.nilai_order > s.average + 3 * s.stdev\n   OR t.nilai_order < s.average - 3 * s.stdev\n\n-- reported with each flagged order\n(t.nilai_order - s.average) / s.stdev AS z_score"
         }
       ],
       "tags": [
         "SQL",
-        "Z-score",
+        "MySQL",
         "Anomaly detection",
-        "Procurement"
+        "Sales"
       ],
       "link": null,
-      "note": "Hackathon dataset provided by DQLab. Code is not published."
+      "note": "Hackathon dataset provided by DQLab (Discovering Sales Performance Root Cause Analysis, June 2026). Only the filter is shown; the full query stays private out of respect for the hackathon."
     },
     {
       "slug": "lpg-distribution",

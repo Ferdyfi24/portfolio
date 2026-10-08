@@ -1,15 +1,18 @@
 /* Shared behaviour for every page. Plain ES2015, no libraries.
    - the MOTION switch: html.still stops every canvas and CSS animation, remembered in localStorage, off under
      prefers-reduced-motion, and everything pauses while the tab is hidden
-   - the SOUND switch: drives sound.js (default off, remembered, created only on the visitor's own click)
-   - where each sound plays: scanner beep on project cards and primary buttons, forklift beeper on a rack filter,
-     switch clack on either switch, the rubber stamp carried across internal links, the conveyor hum while the hero
-     conveyor is on screen
+   - the SOUND switch: drives sound.js (default off, remembered, created only on the visitor's own click). While the
+     switch is on but the browser has not let audio start yet, the lamp blinks and the label says to click anywhere.
+   - where each sound plays: scanner beep on project cards and primary buttons, forklift beeper on a rack or tag filter,
+     switch clack on either switch, the rubber stamp carried across internal links, the conveyor bed while the hero
+     or the footer belt is on screen, a cardboard tap on hovering a card or tag and a tick on buttons, chips and nav
+     links (mouse only). The canvas scenes ask for their own cues (viz.js).
    - page transitions: cross-document view transitions where the browser has them (site.css), otherwise a short leave
      animation on internal links; state is restored on pageshow when a page comes back from the bfcache
    - helpers shared with project.html through window.Site: escaping, **bold** markup, Code 128 barcodes, count-up,
-     projects.json
-   - on index.html: the project rack rendered from projects.json, with filter chips computed from the data
+     projects.json, certificates.json and the QC tag markup for one certificate (Site.certTag)
+   - on index.html: the project rack rendered from projects.json and the certificate tag board rendered from
+     certificates.json, each with filter chips computed from the data
    - scroll reveal, nav state, phone menu
    The pages read fine without any of this; only the JSON-rendered parts need JS and they have noscript fallbacks. */
 (function () {
@@ -41,11 +44,15 @@
   /* ---------- SOUND switch ---------- */
   var sbtn = document.getElementById("sound");
   function paintSound() {
-    var on = !!(snd() && snd().isOn());
+    var S = snd(), on = !!(S && S.isOn()), locked = !!(on && S.isLocked && S.isLocked());
     if (!sbtn) return;
     sbtn.setAttribute("aria-pressed", on ? "true" : "false");
+    sbtn.classList.toggle("wait", locked);
     sbtn.querySelector(".txt").textContent = on ? "SOUND ON" : "SOUND OFF";
-    sbtn.setAttribute("aria-label", on ? "Sound: UI sounds are on. Press to mute them." : "Sound: UI sounds are off. Press to turn them on.");
+    var label = locked ? "Sound is on but the browser is waiting for a click: click, tap or press a key anywhere on the page to start it. Press this switch to mute."
+      : on ? "Sound: ambient and UI sounds are on. Press to mute them." : "Sound: sounds are off. Press to turn them on.";
+    sbtn.setAttribute("aria-label", label);
+    if (locked) sbtn.setAttribute("title", "Click anywhere to start sound"); else sbtn.removeAttribute("title");
   }
   if (sbtn) {
     if (!snd()) sbtn.hidden = true;
@@ -58,14 +65,33 @@
   paintSound();
   window.addEventListener("soundchange", paintSound);
 
-  /* ---------- conveyor hum: only while the hero conveyor is on screen, motion is on, sound is on, tab visible ---------- */
-  var heroCv = document.querySelector(".hero canvas[data-scene='hero']"), heroOn = false;
-  function updateHum() { if (snd()) snd().hum(heroOn && !Site.isStill()); }
-  if (heroCv && "IntersectionObserver" in window) {
-    new IntersectionObserver(function (es) { es.forEach(function (e) { heroOn = e.isIntersecting; }); updateHum(); }, { threshold: .05 }).observe(heroCv);
+  /* ---------- ambient beds: the hero conveyor and the footer belt, each only while on screen, motion on, sound on, tab visible ---------- */
+  var heroCv = document.querySelector(".hero canvas[data-scene='hero']"), beltCv = document.querySelector("canvas[data-scene='belt']"), heroOn = false, beltOn = false;
+  function updateHum() {
+    var S = snd(); if (!S) return;
+    var ok = !Site.isStill();
+    S.ambient("hero", heroOn && ok); S.ambient("belt", beltOn && ok);
+    if (!ok && S.stopCues) S.stopCues();
+  }
+  if ("IntersectionObserver" in window) {
+    if (heroCv) new IntersectionObserver(function (es) { es.forEach(function (e) { heroOn = e.isIntersecting; }); updateHum(); }, { threshold: .05 }).observe(heroCv);
+    if (beltCv) new IntersectionObserver(function (es) { es.forEach(function (e) { beltOn = e.isIntersecting; }); updateHum(); }, { threshold: .05 }).observe(beltCv);
   }
   window.addEventListener("motionchange", updateHum);
   window.addEventListener("soundchange", updateHum);
+
+  /* ---------- hover sounds, mouse only: a cardboard tap entering a card or tag, a tick entering a button, chip or nav link ---------- */
+  var lastScroll = -9;
+  window.addEventListener("scroll", function () { lastScroll = performance.now(); }, { passive: true });
+  document.addEventListener("pointerover", function (e) {
+    var S = snd(), t = e.target;
+    if (!S || e.pointerType !== "mouse" || !t || !t.closest) return;
+    if (performance.now() - lastScroll < 250) return; /* the page moved under a resting pointer, that is not a hover */
+    var small = t.closest("button, .chip, nav.top ul a, .btn, .back, .allposts, .more, .qcbtn, .pn a"), big = t.closest(".slot, .qctag, .feat, .post");
+    var rel = e.relatedTarget;
+    if (small && !(rel && small.contains(rel))) S.cue("tick");
+    else if (big && !(rel && big.contains(rel))) S.cue("tap");
+  }, { passive: true });
 
   /* ---------- page transitions ---------- */
   /* cross-document view transitions are CSS only (site.css); the fallback below is for browsers without them */
@@ -104,7 +130,12 @@
   Site.esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
   /* the only markup allowed in JSON text: **bold** */
   Site.inline = function (s) { return Site.esc(s).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>"); };
-  Site.fmt = function (n, comma) { var s = String(Math.round(n)); return comma ? Number(s).toLocaleString("en-US") : s; };
+  /* dec: decimals to keep. Count-ups take it from the target as written (data-to="87.6" keeps one decimal). */
+  Site.fmt = function (n, comma, dec) {
+    dec = dec || 0; var f = Math.pow(10, dec), v = Math.round(n * f) / f;
+    return comma ? v.toLocaleString("en-US", { minimumFractionDigits: dec, maximumFractionDigits: dec }) : v.toFixed(dec);
+  };
+  Site.decimals = function (s) { var m = /\.(\d+)/.exec(String(s)); return m ? m[1].length : 0; };
 
   /* ---------- Code 128 B barcode, deterministic from the code string, as inline SVG ---------- */
   var C128 = ("212222 222122 222221 121223 121322 131222 122213 122312 132212 221213 221312 231212 112232 122132 122231 113222 123122 123221 223211 221132 221231 213212 223112 312131 311222 321122 321221 312212 322112 322211 212123 212321 232121 111323 131123 131321 112313 132113 132311 211313 231113 231311 112133 112331 132131 113123 113321 133121 313121 211331 231131 213113 213311 213131 311123 311321 331121 312113 312311 332111 314111 221411 431111 111224 111422 121124 121421 141122 141221 112214 112412 122114 122411 142112 142211 241211 221114 413111 241112 134111 111242 121142 121241 114212 124112 124211 411212 421112 421211 212141 214121 412121 111143 111341 131141 114113 114311 411113 411311 113141 114131 311141 411131 211412 211214 211232 2331112").split(" ");
@@ -129,15 +160,15 @@
     es.forEach(function (e) { if (!e.isIntersecting) return; cio.unobserve(e.target); run(e.target); });
   }, { threshold: .5 }) : null;
   function run(el) {
-    var to = parseFloat(el.getAttribute("data-to")), from = parseFloat(el.getAttribute("data-from") || "0"), comma = el.getAttribute("data-fmt") === "1", t0 = null;
-    if (reduce || still || isNaN(to)) { el.textContent = Site.fmt(to, comma); return; }
+    var to = parseFloat(el.getAttribute("data-to")), from = parseFloat(el.getAttribute("data-from") || "0"), comma = el.getAttribute("data-fmt") === "1", dec = Site.decimals(el.getAttribute("data-to")), t0 = null;
+    if (reduce || still || isNaN(to)) { el.textContent = Site.fmt(to, comma, dec); return; }
     function step(ts) {
       if (!t0) t0 = ts;
       var p = Math.min(1, (ts - t0) / 1500), k = 1 - Math.pow(1 - p, 4);
-      el.textContent = Site.fmt(from + (to - from) * k, comma);
+      el.textContent = Site.fmt(from + (to - from) * k, comma, dec);
       if (p < 1) requestAnimationFrame(step);
     }
-    el.textContent = Site.fmt(from, comma);
+    el.textContent = Site.fmt(from, comma, dec);
     requestAnimationFrame(step);
   }
   Site.countUp = function (root) {
@@ -164,17 +195,86 @@
   };
   Site.rackName = function (data, key) { return (data.racks && data.racks[key]) ? data.racks[key] : key; };
 
+  /* ---------- certificates.json, fetched once, and the QC tag for one certificate ---------- */
+  var cj = null;
+  Site.certificates = function () {
+    if (!cj) cj = fetch("certificates.json", { cache: "no-cache" }).then(function (r) { if (!r.ok) throw new Error("certificates.json " + r.status); return r.json(); });
+    return cj;
+  };
+  var MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  /* "2026-09-14" -> "14 Sep 2026", "2026-09" -> "Sep 2026", "2026" -> "2026", anything else -> as given, null -> "" */
+  Site.certDate = function (d) {
+    if (!d) return "";
+    var m = /^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?$/.exec(String(d));
+    if (!m) return String(d);
+    var mon = m[2] ? MON[parseInt(m[2], 10) - 1] : "";
+    return (m[3] ? parseInt(m[3], 10) + " " : "") + (mon ? mon + " " : "") + m[1];
+  };
+  /* the QC inspection hang tag: string, punched hole, code with barcode, title, issuer, date and score, a QC PASSED
+     stamp and the actions. Everything is escaped. Wrap the output in <div class="qcboard"> (a grid) or
+     <div class="qcboard one"> for a single tag. data is the parsed certificates.json, for the rack names.
+     opts.hideProject leaves out the "See the project" link, for a tag shown on that project's own page. */
+  Site.certTag = function (cert, data, opts) {
+    var c = cert || {}, esc = Site.esc, rackName = Site.rackName(data || {}, c.rack || "other"), date = Site.certDate(c.date), acts = "";
+    if (c.url) acts += '<a class="qcbtn" href="' + esc(c.url) + '" rel="noopener">Verify <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>';
+    if (c.project && !(opts && opts.hideProject)) acts += '<a class="qcbtn" href="project.html?p=' + encodeURIComponent(c.project) + '">See the project</a>';
+    return '<div class="qc" data-k="' + esc(c.rack || "other") + '"><span class="qcstr" aria-hidden="true"></span>' +
+      '<article class="qctag" aria-label="Certificate ' + esc(c.code) + '">' +
+      '<div class="qchole" aria-hidden="true"><i></i></div>' +
+      '<div class="qchead"><span class="qccode">' + esc(c.code) + '</span><span class="qcrack">' + esc(rackName) + '</span></div>' +
+      '<div class="qcbc">' + Site.barcode(c.code, 28) + '</div>' +
+      '<h3 class="qct">' + esc(c.title) + '</h3>' +
+      '<div class="qciss">' + esc(c.issuer) + '</div>' +
+      '<div class="qcfoot"><dl class="qcrows">' +
+      (date ? '<div><dt>Date</dt><dd>' + esc(date) + '</dd></div>' : "") +
+      (c.score ? '<div><dt>Score</dt><dd>' + esc(c.score) + '</dd></div>' : "") +
+      '<div><dt>Insp.</dt><dd>FI</dd></div></dl>' +
+      '<span class="qcstamp" aria-hidden="true">QC<br>passed</span></div>' +
+      (acts ? '<div class="qcact">' + acts + '</div>' : "") +
+      '</article></div>';
+  };
+
+  /* ---------- filter chips shared by the rack and the tag board: cards leave, survivors re-enter with a stagger ---------- */
+  function chipsHtml(data, list, keyOf) {
+    var keys = [], counts = {};
+    list.forEach(function (p) { var k = keyOf(p) || "other"; if (!counts[k]) { counts[k] = 0; keys.push(k); } counts[k]++; });
+    /* chip order: the racks object first, then any rack only found on an item */
+    var order = Object.keys(data.racks || {}).filter(function (k) { return counts[k]; }).concat(keys.filter(function (k) { return !(data.racks && data.racks[k]); }));
+    var chips = '<button class="chip" type="button" data-f="all" aria-pressed="true">All<span>' + list.length + '</span></button>';
+    order.forEach(function (k) { chips += '<button class="chip" type="button" data-f="' + Site.esc(k) + '" aria-pressed="false">' + Site.esc(Site.rackName(data, k)) + '<span>' + counts[k] + '</span></button>'; });
+    return chips;
+  }
+  function bindFilters(filters, board, itemSel) {
+    var chipEls = [].slice.call(filters.querySelectorAll(".chip")), slots = [].slice.call(board.querySelectorAll(itemSel)), ft = null;
+    chipEls.forEach(function (ch) {
+      ch.addEventListener("click", function () {
+        var f = ch.getAttribute("data-f");
+        if (ch.getAttribute("aria-pressed") === "true") return;
+        chipEls.forEach(function (c) { c.setAttribute("aria-pressed", c === ch ? "true" : "false"); });
+        if (snd()) snd().beeper();
+        function apply() {
+          var j = 0;
+          slots.forEach(function (s) {
+            var show = f === "all" || s.getAttribute("data-k") === f;
+            s.hidden = !show; s.classList.remove("out");
+            if (show) { s.classList.remove("in"); void s.offsetWidth; s.style.setProperty("--d", Math.min(j++, 6) * 55 + "ms"); s.classList.add("in"); }
+          });
+          board.classList.toggle("filtered", f !== "all");
+          if (window.Viz) window.Viz.scan();
+        }
+        if (reduce || still) { apply(); return; }
+        slots.forEach(function (s) { if (!s.hidden) s.classList.add("out"); });
+        clearTimeout(ft); ft = setTimeout(apply, 180);
+      });
+    });
+  }
+
   /* ---------- index: the rack ---------- */
   var rack = document.getElementById("rack"), filters = document.getElementById("filters");
   if (rack && filters) {
     Site.projects().then(function (data) {
-      var projects = data.projects || [], keys = [], counts = {};
-      projects.forEach(function (p) { var k = p.rack || "other"; if (!counts[k]) { counts[k] = 0; keys.push(k); } counts[k]++; });
-      /* chip order: the racks object first, then any rack only found on a project */
-      var order = Object.keys(data.racks || {}).filter(function (k) { return counts[k]; }).concat(keys.filter(function (k) { return !(data.racks && data.racks[k]); }));
-      var chips = '<button class="chip" type="button" data-f="all" aria-pressed="true">All<span>' + projects.length + '</span></button>';
-      order.forEach(function (k) { chips += '<button class="chip" type="button" data-f="' + Site.esc(k) + '" aria-pressed="false">' + Site.esc(Site.rackName(data, k)) + '<span>' + counts[k] + '</span></button>'; });
-      filters.innerHTML = chips;
+      var projects = data.projects || [];
+      filters.innerHTML = chipsHtml(data, projects, function (p) { return p.rack; });
       var html = "";
       projects.forEach(function (p, i) {
         var tags = (p.tags || []).slice(0, 3).map(function (t) { return "<span>" + Site.esc(t) + "</span>"; }).join("");
@@ -191,31 +291,29 @@
       rack.innerHTML = html;
       Site.reveal(rack);
       if (window.Viz) window.Viz.scan();
-      /* filter: cards leave, survivors re-enter with a stagger; the forklift beeper marks the change */
-      var chipEls = [].slice.call(filters.querySelectorAll(".chip")), slots = [].slice.call(rack.querySelectorAll(".slot")), ft = null;
-      chipEls.forEach(function (ch) {
-        ch.addEventListener("click", function () {
-          var f = ch.getAttribute("data-f");
-          if (ch.getAttribute("aria-pressed") === "true") return;
-          chipEls.forEach(function (c) { c.setAttribute("aria-pressed", c === ch ? "true" : "false"); });
-          if (snd()) snd().beeper();
-          function apply() {
-            var j = 0;
-            slots.forEach(function (s) {
-              var show = f === "all" || s.getAttribute("data-k") === f;
-              s.hidden = !show; s.classList.remove("out");
-              if (show) { s.classList.remove("in"); void s.offsetWidth; s.style.setProperty("--d", Math.min(j++, 6) * 55 + "ms"); s.classList.add("in"); }
-            });
-            rack.classList.toggle("filtered", f !== "all");
-            if (window.Viz) window.Viz.scan();
-          }
-          if (reduce || still) { apply(); return; }
-          slots.forEach(function (s) { if (!s.hidden) s.classList.add("out"); });
-          clearTimeout(ft); ft = setTimeout(apply, 180);
-        });
-      });
+      bindFilters(filters, rack, ".slot");
     }).catch(function () {
       rack.innerHTML = '<div class="rack-empty">The rack could not be loaded. The code lives at <a href="https://github.com/Ferdyfi24">github.com/Ferdyfi24</a>.</div>';
+    });
+  }
+
+  /* ---------- index: the certificate tag board, and the count in About ---------- */
+  var board = document.getElementById("certboard"), cfilters = document.getElementById("cfilters"), ccount = document.getElementById("certcount");
+  if (board && cfilters) {
+    Site.certificates().then(function (data) {
+      var list = data.certificates || [];
+      cfilters.innerHTML = chipsHtml(data, list, function (c) { return c.rack; });
+      board.innerHTML = list.map(function (c) { return Site.certTag(c, data); }).join("");
+      [].forEach.call(board.querySelectorAll(".qc"), function (el) { el.classList.add("rv"); });
+      Site.reveal(board);
+      bindFilters(cfilters, board, ".qc");
+      if (ccount) {
+        var n = {}; list.forEach(function (c) { var k = c.rack || "other"; n[k] = (n[k] || 0) + 1; });
+        var parts = Object.keys(n).map(function (k) { return n[k] + " " + Site.rackName(data, k).toLowerCase(); });
+        ccount.textContent = list.length + " on the tag board" + (parts.length ? " (" + parts.join(", ") + ")" : "") + " · ";
+      }
+    }).catch(function () {
+      board.innerHTML = '<div class="rack-empty">The tag board could not be loaded. The certificates are listed on <a href="https://www.linkedin.com/in/ferdyfebrianiskandar">LinkedIn</a>.</div>';
     });
   }
 

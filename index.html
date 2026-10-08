@@ -5,10 +5,23 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Ferdy Febrian Iskandar · Operations and data</title>
 <meta name="description" content="Operations and systems: warehouse, consignment distribution, and the software underneath them. Projects by Ferdy Febrian Iskandar, Jakarta.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Ferdy Febrian Iskandar">
+<meta property="og:url" content="https://ferdy-portfolio.pages.dev/">
 <meta property="og:title" content="Ferdy Febrian Iskandar · Operations and data">
 <meta property="og:description" content="A WMS built by ops, ledger patterns, parsers and dashboards for warehouse and consignment distribution.">
-<meta property="og:image" content="poster.jpg">
+<meta property="og:image" content="https://ferdy-portfolio.pages.dev/og-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Ferdy Febrian Iskandar. Operations and systems. And the software underneath.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Ferdy Febrian Iskandar · Operations and data">
+<meta name="twitter:description" content="A WMS built by ops, ledger patterns, parsers and dashboards for warehouse and consignment distribution.">
+<meta name="twitter:image" content="https://ferdy-portfolio.pages.dev/og-card.png">
 <meta name="theme-color" content="#F26419">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -26,6 +39,7 @@
     <ul id="navlinks">
       <li><a href="#featured">Featured</a></li>
       <li><a href="#projects">Projects</a></li>
+      <li><a href="#certs">Certificates</a></li>
       <li><a href="#process">How I work</a></li>
       <li><a href="#writing">Writing</a></li>
       <li><a href="#about">About</a></li>
@@ -120,8 +134,18 @@
     </div>
   </section>
 
+  <section id="certs" class="wrap">
+    <div class="shead rv">
+      <div><span class="eyebrow">Zone 03 · Certifications</span><h2>Certified,<br><span class="acc">tagged and checked</span></h2></div>
+      <div class="filters" id="cfilters" role="group" aria-label="Filter certificates"></div>
+    </div>
+    <div class="qcboard" id="certboard" aria-live="polite">
+      <noscript><div class="noscript-rack">The tag board is rendered from certificates.json and needs JavaScript. The certificates are listed on <a href="https://www.linkedin.com/in/ferdyfebrianiskandar">LinkedIn</a>.</div></noscript>
+    </div>
+  </section>
+
   <section id="process" class="wrap">
-    <div class="shead rv"><div><span class="eyebrow">Zone 03 · Method</span><h2>How I<br><span class="acc">work</span></h2></div><p>Built by ops, powered by AI. Three steps, the same on every tool.</p></div>
+    <div class="shead rv"><div><span class="eyebrow">Zone 04 · Method</span><h2>How I<br><span class="acc">work</span></h2></div><p>Built by ops, powered by AI. Three steps, the same on every tool.</p></div>
     <div class="pick">
       <div class="step rv"><div class="n">01</div><h3>Write the rule</h3><p>When a process breaks, I write down the rule it must never break again, in business terms.</p><div class="ex"><i>rule</i><span>No PO number, no delivery order.</span></div></div>
       <div class="step rv"><div class="n">02</div><h3>Build the smallest tool</h3><p>I describe the behaviour, AI writes the code, and the tool lives where the team already works: Sheets, Excel, a phone.</p><div class="ex"><i>tool</i><span>Field app: check-in only inside 300 m.</span></div></div>
@@ -130,7 +154,7 @@
   </section>
 
   <section id="writing" class="wrap">
-    <div class="shead rv"><div><span class="eyebrow">Zone 04 · Writing</span><h2>Writing</h2></div><p>Notes on how I got here, on Medium.</p></div>
+    <div class="shead rv"><div><span class="eyebrow">Zone 05 · Writing</span><h2>Writing</h2></div><p>Notes on how I got here, on Medium.</p></div>
     <a class="post rv" href="https://medium.com/@iskandarferdy559/dari-bisnis-lpg-keluarga-ke-python-cerita-gue-belajar-data-analyst-di-dqlab-e7cb30d461ce">
       <span class="pic" aria-hidden="true">M</span>
       <div><div class="eyebrow">Medium · in Indonesian</div><h3>Dari Bisnis LPG Keluarga ke Python: Cerita Gue Belajar Data Analyst di DQLab</h3><p>From a family LPG business to Python: how I started learning data analysis.</p></div>
@@ -149,7 +173,7 @@
   -->
 
   <section id="about" class="wrap">
-    <div class="shead rv"><div><span class="eyebrow">Zone 05 · About</span><h2>About</h2></div></div>
+    <div class="shead rv"><div><span class="eyebrow">Zone 06 · About</span><h2>About</h2></div></div>
     <div class="about">
       <div class="idwrap rv">
         <figure class="idpass" aria-label="Access pass: Ferdy Febrian Iskandar, operations and data, Jakarta">
@@ -173,7 +197,7 @@
       </div>
       <div class="facts rv">
         <div class="fact"><small>Education</small><div>Management, Universitas Andalas · GPA 3.79 / 4.00 · Best Graduate of Class</div></div>
-        <div class="fact"><small>Certifications</small><div>Google Analytics (92 / 100) · HubSpot CRM (89 / 100)</div></div>
+        <div class="fact"><small>Certifications</small><div><span id="certcount"></span><a href="#certs">See the tag board</a></div></div>
         <div class="fact"><small>Tools</small><div class="stack"><span>Google Sheets</span><span>Apps Script</span><span>Excel</span><span>SQL</span><span>Python</span><span>Streamlit</span></div></div>
       </div>
       </div>

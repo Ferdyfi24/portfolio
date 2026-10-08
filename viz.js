@@ -8,7 +8,9 @@
      along the bottom; floor = faint location grid with cartons moving node to node; belt = a slim conveyor in the footer.
    Palette: ink, safety orange, two greys, white. States are ink versus orange, solid versus dashed or hatched. No gradients, no shadows.
    Off-screen canvases are idle. html.still (the motion switch), prefers-reduced-motion and a hidden tab all stop the loop
-   after one still frame. devicePixelRatio is handled and everything is redrawn once web fonts arrive. */
+   after one still frame. devicePixelRatio is handled and everything is redrawn once web fonts arrive.
+   Sound: the hero and floor scenes ask window.Sound.cue(name, {pan, ...}) when something happens (the hoist phases,
+   a floor carton rolling or set down). They only ask on live frames; sound.js decides whether anything plays. */
 (function () {
   var INK = "#121212", OR = "#F26419", MUT = "#5F5F5F", RULE = "#D6D6D6", WHITE = "#FFFFFF";
   var MONO = "IBM Plex Mono, Menlo, Consolas, monospace", COND = "Barlow Condensed, Arial Narrow, sans-serif";
@@ -42,6 +44,13 @@
     return c[key];
   }
   function alpha(hex, a) { var s = hex.slice(1); return "rgba(" + parseInt(s.slice(0, 2), 16) + "," + parseInt(s.slice(2, 4), 16) + "," + parseInt(s.slice(4, 6), 16) + "," + a + ")"; }
+  /* sound cues: the scenes only ask, sound.js decides whether anything plays. pan is -1 (left) to 1 (right) from an x position. */
+  function cue(name, o) { try { if (window.Sound && window.Sound.cue) window.Sound.cue(name, o); } catch (e) { } }
+  function panOf(x, w) { return clamp((x / w) * 2 - 1, -1, 1) * .8; }
+  /* a scene may fire cues only on a live frame that follows another live frame closely: not on the first draw after a
+     rebuild, not on a still frame, and not after a long gap (tab hidden, scrolled away), where every threshold between
+     the old and new time would otherwise fire at once */
+  function liveStep(it, t) { var ok = !!it.live && it.lastT != null && t - it.lastT < .5 && t > it.lastT; it.lastT = t; return ok; }
   function tag(c, s, x, y, px, col, bg) { var ww = tw(c, s, px) + px; c.fillStyle = bg || WHITE; c.fillRect(x - px / 2, y - px * .8, ww, px * 1.6); c.strokeStyle = col; c.lineWidth = 1; c.strokeRect(x - px / 2, y - px * .8, ww, px * 1.6); txt(c, s, x, y, px, col); }
   /* a carton in line work: outline, flap seam, a small label */
   function carton(c, x, y, w, h, col, lw) {
@@ -587,7 +596,7 @@
 
   /* hero: racking elevation on the right (or below the copy on a phone), a hoist that lifts a carton from the top beam down to the conveyor */
   SC.hero = function (c, w, h, t, it) {
-    var R = it.rect, col = WHITE;
+    var R = it.rect, col = WHITE, prevT = it.lastT, live = liveStep(it, t);
     if (!R || R.w < 120) R = { x: w * .55, y: 40, w: w * .4, h: h - 180 };
     var yT = h - 90, yB = h - 62, floorY = h - 36, v = 55;
     var bays = R.w > 400 ? 3 : 2, fw = 10, bayW = (R.w - fw) / bays, railY = R.y + 14, rackTop = R.y + 58, rackFloor = R.y + R.h - 6, levelH = (rackFloor - rackTop) / 3;
@@ -640,6 +649,18 @@
       else { cx = dropX + v * (u - 7); cy = yT - cH - 1; if (u < 7.8) { cableTo = lerp(yT - cH - 1, railY + 8, ease((u - 7) / .8)); trolleyX = dropX; } }
       inst.push({ u: u, cx: cx, cy: cy });
     }
+    /* sound cues for the current hoist, fired once when its phase time crosses a threshold (lastU < threshold <= u).
+       The trolley motor runs while it travels, the winch while the cable moves, the latch grabs at 2.4, the carton lands at 7. */
+    if (live) {
+      var uN = t - nNow * P, uL = prevT - nNow * P, slotN = ((nNow % bays) + bays) % bays, sxN = R.x + fw + slotN * bayW + (bayW - fw) / 2, pD = panOf(dropX, w), pS = panOf(sxN, w);
+      var cross = function (th) { return uL < th && th <= uN; };
+      if (cross(0)) cue("motor", { pan: pD, panTo: pS, dur: 1.2 });
+      if (cross(1.2)) cue("winch", { pan: pS, dur: 1.2, dir: "down" });
+      if (cross(2.4)) { cue("latch", { pan: pS }); cue("winch", { pan: pS, dur: 1.2, dir: "up" }); }
+      if (cross(3.6)) cue("motor", { pan: pS, panTo: pD, dur: 2 });
+      if (cross(5.6)) cue("winch", { pan: pD, dur: 1.4, dir: "down" });
+      if (cross(7)) { cue("thump", { pan: pD }); cue("winch", { pan: pD, dur: .8, dir: "up", gain: .6 }); }
+    }
     /* pallets and resting cartons on the top beam */
     for (b = 0; b < bays; b++) {
       var tbx = R.x + fw + b * bayW, tbw = bayW - fw, tpy = topY - 8, tcx = tbx + tbw / 2;
@@ -675,12 +696,16 @@
     }
     c.drawImage(it.grid.cv, 0, 0, w, h);
     var dt = Math.min(.05, t - (it.last == null ? t : it.last)); it.last = t;
+    var live = liveStep(it, t);
     it.movers.forEach(function (m) {
+      var wasDwell = m.dwell > 0;
       if (m.dwell > 0) m.dwell -= dt; else m.p += m.v * dt;
+      if (live && wasDwell && m.dwell <= 0) cue("caster", { pan: panOf(m.nx * G, w) }); /* a carton starts to roll */
       if (m.p >= 1) {
         m.p = 0; m.nx += m.dx; m.ny += m.dy;
         if (m.r() < .35) { var d = [[1, 0], [-1, 0], [0, 1], [0, -1]][Math.floor(m.r() * 4)]; m.dx = d[0]; m.dy = d[1]; m.dwell = .6 + m.r() * 1.8; } else m.dwell = m.r() < .5 ? 0 : .3 + m.r() * .8;
         if (m.nx < -1) m.nx = Math.ceil(w / G); if (m.nx > w / G + 1) m.nx = -1; if (m.ny < -1) m.ny = Math.ceil(h / G); if (m.ny > h / G + 1) m.ny = -1;
+        if (live && m.dwell > 0) cue("settle", { pan: panOf(m.nx * G, w) }); /* set down at its node */
       }
       var k = ease(m.p), x = (m.nx + m.dx * k) * G, y = (m.ny + m.dy * k) * G, s = m.s;
       c.globalAlpha = .34;
@@ -706,8 +731,9 @@
     if (scene === "hero") { var box = cv.parentElement.querySelector(".rackbox"); if (box) { var b = box.getBoundingClientRect(); it.rect = { x: b.left - r.left, y: b.top - r.top, w: b.width, h: b.height }; } }
     return it;
   }
-  function draw(it, t) {
+  function draw(it, t, live) {
     if (!it.fn || it.w < 2) return;
+    it.live = !!live; /* only a frame of the running loop may fire sound cues */
     var c = it.c; c.setTransform(it.dpr, 0, 0, it.dpr, 0, 0); c.clearRect(0, 0, it.w, it.h);
     c.globalAlpha = 1; c.setLineDash([]); c.lineDashOffset = 0; c.lineCap = "butt"; c.lineJoin = "miter";
     var S = Math.min(it.h / 150, 2.3);
@@ -717,11 +743,11 @@
   function loop() {
     if (isStill()) { running = false; return; }
     var any = false, t = now();
-    for (var i = 0; i < items.length; i++) if (items[i].on) { any = true; draw(items[i], t); }
+    for (var i = 0; i < items.length; i++) if (items[i].on) { any = true; draw(items[i], t, true); }
     if (any) requestAnimationFrame(loop); else running = false;
   }
   function wake() { if (!running && !isStill()) { running = true; requestAnimationFrame(loop); } }
-  function stills() { var t = Math.max(STILL, now()); items.forEach(function (it) { draw(it, t); }); }
+  function stills() { var t = Math.max(STILL, now()); items.forEach(function (it) { draw(it, t, false); }); }
   function resetAll() { items.forEach(function (it, i) { var on = it.on; items[i] = setup(it.cv); items[i].on = on; }); if (isStill()) stills(); else wake(); }
   var io = ("IntersectionObserver" in window) ? new IntersectionObserver(function (es) {
     es.forEach(function (e) { for (var i = 0; i < items.length; i++) if (items[i].cv === e.target) items[i].on = e.isIntersecting || items[i].scene === "floor"; });

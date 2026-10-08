@@ -77,3 +77,37 @@ Blok di `details` bisa dicampur:
 Kalau ada koma atau kurung yang kurang, rak project di halaman depan cuma nampilin tulisan "The rack could not be loaded", dan halaman detail project jadi "Not found". Bagian lain halaman depan sama halaman WMS tetap jalan. Buka `projects.json` lagi, cek di sekitar blok yang barusan ditambah, perbaiki, commit lagi. GitHub nyimpen semua versi, jadi selalu bisa balik ke versi sebelumnya lewat tab History.
 
 Hindari tanda pisah panjang di teks. Pakai koma atau titik dua.
+
+## Sertifikat
+
+Semua sertifikat dibaca dari `certificates.json`. Rak sertifikat di halaman depan kebentuk sendiri dari file itu.
+
+1. Buka `certificates.json` di GitHub, klik ikon pensil.
+2. Salin satu blok di daftar `"certificates": [ ... ]`, tempel di bawahnya, kasih koma di antaranya.
+3. Isi kolomnya, lalu **Commit changes**.
+
+```json
+{
+  "code": "QC-C10",
+  "rack": "course",
+  "title": "Nama sertifikat",
+  "issuer": "Penerbit",
+  "date": "2026-10-01",
+  "score": null,
+  "url": "https://link-verifikasi",
+  "project": null
+}
+```
+
+| Kolom | Isi |
+|---|---|
+| `code` | Nomor tag, bebas, misalnya lanjutkan urutan QC-C10, QC-C11 |
+| `rack` | `hack` (Hackathons) atau `course` (Courses). Rak baru: tambah kunci di `"racks"` paling atas |
+| `date` | `2026-10-01`, `2026-10`, `2026`, atau `null` kalau ga ada |
+| `score` | Misalnya `"100 / 100"`, atau `null` |
+| `url` | Link verifikasi (Coursera, Dicoding, dan lain-lain). `null` kalau ga ada, tombol Verify ga muncul |
+| `project` | Slug project di `projects.json` kalau sertifikat ini hasil dari project itu. Tag-nya ikut muncul di halaman project tersebut. `null` kalau ga terkait |
+
+## Gambar preview link (opsional)
+
+Waktu link project dibagikan di LinkedIn atau WhatsApp, gambarnya diambil dari `og/<slug>.png`. Kalau project baru belum punya gambar, yang dipakai kartu umum `og-card.png`, jadi tetap aman. Buat bikin gambar khusus project baru, minta Claude jalankan `node tools/og.mjs og` lalu upload file barunya di folder `og`.

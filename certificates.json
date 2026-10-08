@@ -1,0 +1,129 @@
+{
+  "_readme": "Every certificate on the site comes from this file. Order in the list = order on the site. How to add one: see ADD-A-PROJECT.md, section Certificates.",
+  "racks": {
+    "hack": "Hackathons",
+    "course": "Courses"
+  },
+  "certificates": [
+    {
+      "code": "QC-H01",
+      "rack": "hack",
+      "title": "Excel Hackathon: Inventory Replenishment",
+      "issuer": "DQLab x UjiKompetensi",
+      "date": "2026-09",
+      "score": "100 / 100",
+      "url": "https://academy.dqlab.id/Certificate_check/result/DQLABHCK100V4TGHFJP",
+      "project": "replenishment"
+    },
+    {
+      "code": "QC-H02",
+      "rack": "hack",
+      "title": "Python Hackathon: Retail Crisis and Recovery",
+      "issuer": "DQLab x UjiKompetensi",
+      "date": "2026-05",
+      "score": null,
+      "url": "https://academy.dqlab.id/certificate/pdf/DQLABHCKPR2IKUWAR",
+      "project": "basket"
+    },
+    {
+      "code": "QC-H03",
+      "rack": "hack",
+      "title": "SQL Hackathon: Sales Performance Root Cause Analysis",
+      "issuer": "DQLab",
+      "date": "2026-06",
+      "score": "100 / 100 · Rank 62 of 194",
+      "url": "https://academy.dqlab.id/certificate_check/result/DQLABHCK100V3GSHPBD",
+      "project": "order-anomaly"
+    },
+    {
+      "code": "QC-C01",
+      "rack": "course",
+      "title": "Ask Questions to Make Data-Driven Decisions",
+      "issuer": "Google · Coursera",
+      "date": "2026-09-14",
+      "score": null,
+      "url": "https://coursera.org/verify/FD22B1HIZ4E2",
+      "project": null
+    },
+    {
+      "code": "QC-C02",
+      "rack": "course",
+      "title": "Prepare Data for Exploration",
+      "issuer": "Google · Coursera",
+      "date": "2026-09-14",
+      "score": null,
+      "url": "https://coursera.org/verify/7SLMFTX530IW",
+      "project": null
+    },
+    {
+      "code": "QC-C03",
+      "rack": "course",
+      "title": "Process Data from Dirty to Clean",
+      "issuer": "Google · Coursera",
+      "date": "2026-09-14",
+      "score": null,
+      "url": "https://coursera.org/verify/HVSYGEIUOEWU",
+      "project": null
+    },
+    {
+      "code": "QC-C04",
+      "rack": "course",
+      "title": "Analyze Data to Answer Questions",
+      "issuer": "Google · Coursera",
+      "date": "2026-09-14",
+      "score": null,
+      "url": "https://coursera.org/verify/KIZY3BQOHIV1",
+      "project": null
+    },
+    {
+      "code": "QC-C05",
+      "rack": "course",
+      "title": "Share Data Through the Art of Visualization",
+      "issuer": "Google · Coursera",
+      "date": "2026-09-14",
+      "score": null,
+      "url": "https://coursera.org/verify/L991C18X5XXI",
+      "project": null
+    },
+    {
+      "code": "QC-C06",
+      "rack": "course",
+      "title": "Google Data Analytics Capstone: Complete a Case Study",
+      "issuer": "Google · Coursera",
+      "date": "2026-09-14",
+      "score": null,
+      "url": "https://coursera.org/verify/Q5LY4BOZK2KR",
+      "project": null
+    },
+    {
+      "code": "QC-C07",
+      "rack": "course",
+      "title": "Introduction to Data Analysis Using Python",
+      "issuer": "Google · Coursera",
+      "date": "2026-09-03",
+      "score": null,
+      "url": "https://coursera.org/verify/M7ZHRDW173FC",
+      "project": null
+    },
+    {
+      "code": "QC-C08",
+      "rack": "course",
+      "title": "Google Analytics",
+      "issuer": "Google",
+      "date": null,
+      "score": "92 / 100",
+      "url": null,
+      "project": null
+    },
+    {
+      "code": "QC-C09",
+      "rack": "course",
+      "title": "HubSpot CRM",
+      "issuer": "HubSpot Academy",
+      "date": null,
+      "score": "89 / 100",
+      "url": null,
+      "project": null
+    }
+  ]
+}

@@ -6,6 +6,18 @@
 <title>Project · Ferdy Febrian Iskandar</title>
 <meta name="description" content="A project by Ferdy Febrian Iskandar: operations, supply chain and data.">
 <meta name="theme-color" content="#F26419">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Ferdy Febrian Iskandar">
+<meta property="og:title" content="Project · Ferdy Febrian Iskandar">
+<meta property="og:description" content="A project by Ferdy Febrian Iskandar: operations, supply chain and data.">
+<meta property="og:url" content="https://ferdy-portfolio.pages.dev/project.html">
+<meta property="og:image" content="https://ferdy-portfolio.pages.dev/og-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -147,7 +159,7 @@
       h += '<div class="nums" aria-label="Numbers">';
       p.numbers.forEach(function (n, k) {
         n = n || {}; var v = +n.value || 0;
-        h += '<div class="num"><div class="nh">' + esc(QTY[doc]) + ' · ' + pad2(k) + '</div><b>' + esc(n.prefix || "") + '<span data-to="' + v + '"' + (n.comma ? ' data-fmt="1"' : "") + '>' + S.fmt(v, !!n.comma) + '</span>' + (n.suffix ? '<span class="sfx">' + esc(n.suffix) + '</span>' : "") + '</b><span>' + esc(n.label) + '</span>' + (doc === "count" ? '<div class="sys">System<i></i></div>' : "") + '</div>';
+        h += '<div class="num"><div class="nh">' + esc(QTY[doc]) + ' · ' + pad2(k) + '</div><b>' + esc(n.prefix || "") + '<span data-to="' + v + '"' + (n.comma ? ' data-fmt="1"' : "") + '>' + S.fmt(v, !!n.comma, S.decimals(v)) + '</span>' + (n.suffix ? '<span class="sfx">' + esc(n.suffix) + '</span>' : "") + '</b><span>' + esc(n.label) + '</span>' + (doc === "count" ? '<div class="sys">System<i></i></div>' : "") + '</div>';
       });
       h += '</div>';
     }
@@ -161,6 +173,7 @@
       var blocks = p.details.map(function (b) { return block(b, doc); }).join("");
       if (blocks) h += '<section class="dsec"><h2>' + esc(p.detailTitle) + ' <span class="acc">' + esc(p.detailAccent) + '</span></h2><div class="blocks">' + blocks + '</div></section>';
     }
+    h += '<div id="certslot"></div>';
     h += '<div class="dfoot"><div>' + (p.tags && p.tags.length ? '<div class="tags">' + p.tags.map(function (t) { return "<span>" + esc(t) + "</span>"; }).join("") + '</div>' : "") + (p.note ? '<p class="note">' + esc(p.note) + '</p>' : "") + '</div>' +
       (p.link && p.link.url ? '<a class="btn primary" href="' + esc(p.link.url) + '">' + esc(p.link.label || "Open") + ' <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>' : "") + '</div>';
     h += '<div class="sigs"><div class="sig"><small>Prepared by</small><span>Ferdy F. Iskandar</span></div><div class="sig"><small>Checked by</small><span></span></div>' + (doc === "delivery" ? '<div class="sig"><small>Received by</small><span></span></div>' : "") + '</div>';
@@ -173,11 +186,20 @@
     S.reveal(out); S.countUp(out);
     if (window.Viz) window.Viz.scan();
     if (window.Sound) window.Sound.stamp();
+    /* the certificate that came out of this project, if certificates.json links one to it */
+    if (S.certificates && S.certTag) S.certificates().then(function (cd) {
+      var c = (cd.certificates || []).filter(function (x) { return x && x.project === p.slug; }), slot = document.getElementById("certslot");
+      if (!c.length || !slot) return;
+      slot.innerHTML = '<section class="dsec"><h2>Certificate <span class="acc">on file</span></h2><div class="qcboard one">' + c.map(function (x) { return S.certTag(x, cd, { hideProject: true }); }).join("") + '</div></section>';
+    }).catch(function () { });
     var bars = [].slice.call(out.querySelectorAll(".gauge .tr i"));
     if (S.isStill() || window.matchMedia("(prefers-reduced-motion: reduce)").matches) bars.forEach(function (b) { b.style.transition = "none"; b.style.setProperty("--w", b.getAttribute("data-w")); });
     else requestAnimationFrame(function () { requestAnimationFrame(function () { bars.forEach(function (b) { b.style.setProperty("--w", b.getAttribute("data-w")); }); }); });
   }
+  /* old slugs that were renamed, so links already shared keep working */
+  var MOVED = { procurement: "order-anomaly" };
   var slug = q("p");
+  if (MOVED[slug]) { slug = MOVED[slug]; try { history.replaceState(null, "", "project.html?p=" + encodeURIComponent(slug)); } catch (e) { } }
   S.projects().then(function (data) {
     var all = data.projects || [], i = -1;
     for (var k = 0; k < all.length; k++) if (all[k] && all[k].slug === slug) { i = k; break; }
