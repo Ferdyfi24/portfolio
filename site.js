@@ -5,7 +5,7 @@
      switch is on but the browser has not let audio start yet, the lamp blinks and the label says to click anywhere.
    - where each sound plays: scanner beep on project cards and primary buttons, forklift beeper on a rack or tag filter,
      switch clack on either switch, the rubber stamp carried across internal links, the conveyor bed while the hero
-     or the footer belt is on screen, a cardboard tap on hovering a card or tag and a tick on buttons, chips and nav
+     or the footer belt is on screen, a soft scanner beep on hovering a card or tag and a tick on buttons, chips and nav
      links (mouse only). The canvas scenes ask for their own cues (viz.js).
    - page transitions: cross-document view transitions where the browser has them (site.css), otherwise a short leave
      animation on internal links; state is restored on pageshow when a page comes back from the bfcache
@@ -80,7 +80,7 @@
   window.addEventListener("motionchange", updateHum);
   window.addEventListener("soundchange", updateHum);
 
-  /* ---------- hover sounds, mouse only: a cardboard tap entering a card or tag, a tick entering a button, chip or nav link ---------- */
+  /* ---------- hover sounds, mouse only: a soft scanner beep entering a card or tag, a tick entering a button, chip or nav link ---------- */
   var lastScroll = -9;
   window.addEventListener("scroll", function () { lastScroll = performance.now(); }, { passive: true });
   document.addEventListener("pointerover", function (e) {
@@ -90,7 +90,7 @@
     var small = t.closest("button, .chip, nav.top ul a, .btn, .back, .allposts, .more, .qcbtn, .pn a"), big = t.closest(".slot, .qctag, .feat, .post");
     var rel = e.relatedTarget;
     if (small && !(rel && small.contains(rel))) S.cue("tick");
-    else if (big && !(rel && big.contains(rel))) S.cue("tap");
+    else if (big && !(rel && big.contains(rel))) S.cue("scan");
   }, { passive: true });
 
   /* ---------- page transitions ---------- */

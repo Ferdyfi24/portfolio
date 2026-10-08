@@ -197,6 +197,8 @@
     tone(c, d, t, "sine", 200, 140, .05, .002, .13);
     return .12;
   };
+  /* scan: hover on a card or tag, the same scanner as the click beep but short and soft, like aiming it before the scan */
+  SND.scan = function (c, d, t) { tone(c, d, t, "sine", 2700, 2700, .045, .003, .15); return .1; };
   /* tick: hover on a button, chip or link */
   SND.tick = function (c, d, t) {
     burst(c, d, t, .005, .12, "highpass", 3200, 0, .5);
@@ -248,7 +250,7 @@
   S.stamp = function () { if (!on) return false; if (!stampOnce()) { pendingStamp = true; return false; } return true; };
 
   /* cues from the scenes and from hover; sound.js decides whether they play */
-  var CAT = { caster: "floor", settle: "floor", tap: "hover", tick: "hover" }, GAP = { floor: 1.2, hover: .05, hero: .06 }, lastCat = {};
+  var CAT = { caster: "floor", settle: "floor", tap: "hover", scan: "hover", tick: "hover" }, GAP = { floor: 1.2, hover: .05, hero: .06 }, lastCat = {};
   S.cue = function (name, o) {
     if (!on || !ctx || !SND[name] || !running()) return false;
     var cat = CAT[name] || "hero", key = cat === "hero" ? name : cat; /* hero cues may overlap each other, so they throttle per name */
