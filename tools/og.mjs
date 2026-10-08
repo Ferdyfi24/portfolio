@@ -2,6 +2,7 @@
      node tools/og.mjs            everything: favicon-32.png, apple-touch-icon.png, og-card.png, og/<slug>.png
      node tools/og.mjs og         only the per-project cards
      node tools/og.mjs card       only og-card.png
+     node tools/og.mjs wms        only og/wms.png (the WMS case study page)
      node tools/og.mjs icons      only the two PNG icons (from favicon.svg)
    Fonts: the site loads Barlow Condensed, Barlow and IBM Plex Mono from Google Fonts. This script embeds the same
    fonts from a local @fontsource folder when one is found (FONTS_DIR, or node_modules/@fontsource next to the site,
@@ -147,6 +148,43 @@ h1 .acc{color:#F26419}
 </body></html>`;
 }
 
+function wmsCard(fonts) {
+  /* the WMS case study: five separate files on the left, one line each into a single ledger on the right */
+  const files = ["INBOUND", "SLOTS", "SHIPMENTS", "FIELD VISITS", "SELL-OUT"];
+  let art = "";
+  files.forEach((f, i) => {
+    const y = 24 + i * 92;
+    art += `<g transform="translate(0 ${y})"><path d="M0 0H70L90 20V70H0Z" fill="#FFFFFF" stroke="#121212" stroke-width="3"/><path d="M70 0V20H90" fill="none" stroke="#121212" stroke-width="3"/>` +
+      `<path d="M14 34H74M14 46H74M14 58H52" stroke="#121212" stroke-width="2.5"/>` +
+      `<text x="104" y="44" font-family="IBM Plex Mono" font-size="17" letter-spacing="2" fill="#121212">${f}</text></g>`;
+    art += `<path d="M262 ${y + 36}C310 ${y + 36} 300 262 352 262" fill="none" stroke="#121212" stroke-width="3"/>`;
+  });
+  art += `<rect x="352" y="196" width="150" height="132" fill="#121212"/>` +
+    `<text x="427" y="250" text-anchor="middle" font-family="Barlow Condensed" font-weight="800" font-size="44" fill="#F26419">ONE</text>` +
+    `<text x="427" y="296" text-anchor="middle" font-family="Barlow Condensed" font-weight="800" font-size="44" fill="#FFFFFF">LEDGER</text>`;
+  return `<!doctype html><html><head><meta charset="utf-8">${fonts}<style>${BASE_CSS}
+body{background:#FFFFFF}
+.side{position:absolute;right:0;top:0;bottom:18px;width:560px;background:#F26419;border-left:5px solid #121212}
+.side svg{position:absolute;left:34px;top:46px;width:510px;height:480px}
+.copy{position:absolute;left:64px;top:58px;width:560px}
+.tag{display:inline-flex;align-items:center;gap:12px;border:3px solid #121212;padding:10px 14px;font-size:19px;letter-spacing:.14em;text-transform:uppercase;font-weight:500}
+.tag i{width:11px;height:11px;background:#F26419;border:2px solid #121212}
+h1{font-size:98px;line-height:.88;font-weight:800;margin-top:34px;white-space:nowrap}
+h1 .acc{display:block;color:#F26419}
+.facts{margin-top:34px;font-size:21px;letter-spacing:.06em;color:#5F5F5F;font-weight:500}
+.addr{position:absolute;left:64px;bottom:66px;display:inline-flex;background:#121212;color:#FFFFFF;font-size:24px;letter-spacing:.06em;padding:12px 18px;font-weight:500}
+.addr b{color:#F26419;font-weight:500;margin-right:16px}
+.hz{position:absolute;left:0;right:0;bottom:0;height:18px;background:#F26419 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M-6 6L6-6M0 24L24 0M18 30L30 18' stroke='%23121212' stroke-width='8.5'/%3E%3C/svg%3E") 0 0/24px 24px repeat;border-top:3px solid #121212}
+</style></head><body>
+<div class="side"><svg viewBox="0 0 510 480">${art}</svg></div>
+<div class="copy"><span class="tag mono"><i></i>Case study · Aug to Oct 2026</span>
+<h1 class="cond">Five files.<span class="acc">Now one WMS.</span></h1>
+<div class="facts mono">8 STORES · 43 SKU · ONE MOVEMENT LEDGER</div></div>
+<div class="addr mono"><b>WWW</b>${SITE}/wms</div>
+<div class="hz"></div>
+</body></html>`;
+}
+
 function iconHtml(size) {
   const svg = readFileSync(join(ROOT, "favicon.svg"), "utf8");
   return `<!doctype html><html><head><meta charset="utf-8"><style>*{margin:0}html,body{width:${size}px;height:${size}px;overflow:hidden;background:#F26419}svg{display:block;width:${size}px;height:${size}px}</style></head><body>${svg}</body></html>`;
@@ -171,6 +209,7 @@ async function main() {
     await shoot(iconHtml(180), 180, 180, join(ROOT, "apple-touch-icon.png"));
   }
   if (what === "all" || what === "card") await shoot(siteCard(fonts), 1200, 630, join(ROOT, "og-card.png"));
+  if (what === "all" || what === "wms") await shoot(wmsCard(fonts), 1200, 630, join(ROOT, "og", "wms.png"));
   if (what === "all" || what === "og") {
     const data = JSON.parse(readFileSync(join(ROOT, "projects.json"), "utf8"));
     mkdirSync(join(ROOT, "og"), { recursive: true });
