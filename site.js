@@ -121,6 +121,9 @@
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + x + ' ' + (h || 40) + '" width="' + x + '" height="' + (h || 40) + '" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true" focusable="false">' + rects + '</svg>';
   };
 
+  /* static barcodes in the page, for example the access pass in About */
+  [].forEach.call(document.querySelectorAll("[data-barcode]"), function (el) { el.innerHTML = Site.barcode(el.getAttribute("data-barcode"), 40); });
+
   /* ---------- count up ---------- */
   var cio = ("IntersectionObserver" in window) ? new IntersectionObserver(function (es) {
     es.forEach(function (e) { if (!e.isIntersecting) return; cio.unobserve(e.target); run(e.target); });
