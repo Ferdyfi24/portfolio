@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Project · Ferdy Febrian Iskandar</title>
+<meta name="description" content="A project by Ferdy Febrian Iskandar: operations, supply chain and data.">
+<meta name="theme-color" content="#F26419">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="site.css">
+<script>document.documentElement.classList.add("js")</script>
+</head>
+<body>
+<a class="skip" href="#doc">Skip to content</a>
+<canvas id="floor" data-scene="floor" aria-hidden="true"></canvas>
+
+<nav class="top" aria-label="Main">
+  <div class="wrap">
+    <a class="mark" href="index.html" aria-label="Ferdy Febrian Iskandar, home"><i>FI</i><span>Ferdy F. Iskandar</span></a>
+    <button class="menu" type="button" aria-expanded="false" aria-controls="navlinks">Menu</button>
+    <ul id="navlinks">
+      <li><a href="index.html#featured">Featured</a></li>
+      <li><a href="index.html#projects">Projects</a></li>
+      <li><a href="index.html#process">How I work</a></li>
+      <li><a href="index.html#writing">Writing</a></li>
+      <li><a href="index.html#about">About</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main>
+  <div class="doc" id="doc">
+    <a class="back" href="index.html#projects">← Back to the rack</a>
+    <div id="out" aria-live="polite">
+      <noscript><div class="notfound"><h1>This document<br><span class="acc">needs JavaScript.</span></h1><p>Project pages are rendered from projects.json in the browser. The code for every project lives at <a href="https://github.com/Ferdyfi24">github.com/Ferdyfi24</a>.</p></div></noscript>
+    </div>
+  </div>
+</main>
+
+<footer style="margin-top:clamp(64px,9vw,112px)">
+  <canvas class="beltline" data-scene="belt" aria-hidden="true"></canvas>
+  <div class="wrap"><span>© 2026 Ferdy Febrian Iskandar · Jakarta</span><span><a href="https://www.linkedin.com/in/ferdy-febrian-iskandar">LinkedIn</a> · <a href="https://github.com/Ferdyfi24">GitHub</a> · <a href="https://medium.com/@iskandarferdy559">Medium</a></span></div>
+</footer>
+
+<div class="panel" role="group" aria-label="Site controls">
+  <button class="sw" id="motion" type="button" aria-pressed="true" aria-label="Motion: animations are on. Press to stop them."><span class="st" aria-hidden="true"></span><span class="lamp" aria-hidden="true"><i></i></span><span class="txt">MOTION ON</span></button>
+  <button class="sw" id="sound" type="button" aria-pressed="false" aria-label="Sound: UI sounds are off. Press to turn them on."><span class="st" aria-hidden="true"></span><span class="lamp" aria-hidden="true"><i></i></span><span class="txt">SOUND OFF</span></button>
+</div>
+<script src="sound.js"></script>
+<script src="site.js"></script>
+<script src="viz.js"></script>
+<script>
+/* project.html: one template for every project. It reads ?p=<slug>, finds the project in projects.json and renders it
+   as a warehouse document. Nothing on this page is hard-coded except the form furniture (headings of the form itself,
+   signature box labels, prev/next). Every value comes from the JSON and is escaped; the only markup allowed is **bold**
+   inside cardPoints.
+
+   FIELD REFERENCE for one entry in projects.json "projects" (order in the array = order on the site and prev/next order)
+   slug          string   unique, used in the URL: project.html?p=<slug>
+   code          string   the document number, shown big on the card and in the barcode, e.g. "R1-01"
+   rack          string   key into "racks" at the top of the file. An unknown key is shown as the key itself.
+   kind          string   small label under the code, e.g. "Synthetic data" or "DQLab Excel Hackathon · Sep 2026"
+   year          string   the document date, e.g. "2026"
+   doc           string   which document the page looks like: count | po | picking | delivery | receipt. Unknown = receipt.
+   title         string   first part of the big title (ink)
+   titleAccent   string   second part of the big title (orange)
+   short         string   short name, used on the card and in prev/next
+   summary       string   one sentence on the card
+   cardPoints    array    bullet strings for the card; **bold** allowed
+   lede          string   opening paragraph on the page
+   meta          array    [{label, value}] small form fields under the lede (three fit on one row)
+   visual        string   sketch name: ledger po repl basket anom lpg fc rfm dash fin, or generic:
+                          line bars network lanes scatter clusters dashboard document image. Unknown = a generic rack map.
+   image         string   only with visual "image": a filename at the site root, e.g. "myshot.jpg"
+   visualCaption string   caption under the sketch
+   numbers       array    [{value:number, prefix:"", suffix:"%", comma:true|false, label}] count up on screen
+   problem       object   {title, text}
+   approach      object   {title, text}
+   result        object   {title, text}
+   detailTitle   string   heading of the details section (ink)
+   detailAccent  string   second line of that heading (orange)
+   details       array    blocks, each with "type":
+                          code     {text}                       shown preformatted
+                          table    {columns:[a,b], rows:[[key, first, second], ...]}
+                          cards    {items:[{title, text, fix?}]}
+                          bars     {items:[{label, value, suffix}]}   value = percent of full width
+                          callout  {title, text}
+                          an unknown type is skipped
+   tags          array    strings
+   link          object   {label, url} or null for no button
+   note          string   small print at the bottom */
+(function () {
+  var S = window.Site, out = document.getElementById("out");
+  var DOCS = { count: "Stock Count Sheet", po: "Purchase Order", picking: "Picking List", delivery: "Delivery Note", receipt: "Goods Receipt" };
+  var QTY = { count: "Counted", po: "Qty ordered", picking: "Qty to pick", delivery: "Qty shipped", receipt: "Qty received" };
+  function q(name) { var m = new RegExp("[?&]" + name + "=([^&]*)").exec(location.search); return m ? decodeURIComponent(m[1].replace(/\+/g, " ")) : ""; }
+  function esc(s) { return S.esc(s); }
+  function pad2(i) { return (i < 9 ? "0" : "") + (i + 1); }
+  function notFound(slug) {
+    document.title = "Not found in this rack · Ferdy Febrian Iskandar";
+    out.innerHTML = '<div class="notfound"><span class="eyebrow">Document not found</span><h1>Not found<br><span class="acc">in this rack.</span></h1>' +
+      '<p>' + (slug ? 'There is no project with the code "' + esc(slug) + '".' : 'No project code was given.') + ' It may have been moved to another slot, or the link is out of date.</p>' +
+      '<div class="cta"><a class="btn primary" href="index.html#projects">Back to the rack</a><a class="btn" href="https://github.com/Ferdyfi24">GitHub</a></div></div>';
+  }
+  function block(b, doc) {
+    if (!b || typeof b !== "object") return "";
+    var pick = doc === "picking", h = "";
+    if (b.type === "code") return '<pre class="code">' + esc(b.text) + '</pre>';
+    if (b.type === "table") {
+      var cols = b.columns || [];
+      h = '<table class="tb"><thead><tr>' + (pick ? '<th scope="col" class="ck"><span class="box" aria-hidden="true"></span></th>' : "") + '<th scope="col">Ref</th><th scope="col">' + esc(cols[0] || "") + '</th><th scope="col">' + esc(cols[1] || "") + '</th></tr></thead><tbody>';
+      (b.rows || []).forEach(function (r) { r = r || []; h += "<tr>" + (pick ? '<td class="ck"><span class="box" aria-hidden="true"></span></td>' : "") + '<td class="k">' + esc(r[0]) + '</td><td>' + esc(r[1]) + '</td><td>' + esc(r[2]) + '</td></tr>'; });
+      return h + "</tbody></table>";
+    }
+    if (b.type === "cards") {
+      h = '<div class="cards">';
+      (b.items || []).forEach(function (it) { it = it || {}; h += '<div class="card"><h3>' + (pick ? '<span class="box" aria-hidden="true"></span>' : "") + '<span>' + esc(it.title) + '</span></h3><p>' + esc(it.text) + '</p>' + (it.fix ? '<div class="fix"><span>' + esc(it.fix) + '</span></div>' : "") + '</div>'; });
+      return h + "</div>";
+    }
+    if (b.type === "bars") {
+      h = '<div class="gauges">';
+      (b.items || []).forEach(function (it) { it = it || {}; var v = Math.max(0, Math.min(100, +it.value || 0)); h += '<div class="gauge"><div class="lbl">' + esc(it.label) + '</div><div class="tr" role="img" aria-label="' + v + esc(it.suffix || "") + '"><i data-w="' + (v / 100) + '"></i></div><div class="v">' + v + esc(it.suffix || "") + '</div></div>'; });
+      return h + "</div>";
+    }
+    if (b.type === "callout") return '<div class="callout"><b>' + esc(b.title) + '</b>' + esc(b.text) + '</div>';
+    return "";
+  }
+  function render(data, p, i, all) {
+    var doc = DOCS[p.doc] ? p.doc : "receipt", pick = doc === "picking", rackName = S.rackName(data, p.rack);
+    document.body.className = "doc-" + doc;
+    document.title = (p.short || p.title || "Project") + " · Ferdy Febrian Iskandar";
+    var md = document.querySelector('meta[name="description"]'); if (md) md.setAttribute("content", p.lede || p.summary || "");
+    var h = '<article class="form rv">';
+    h += '<header class="dhead"><div><div class="dt">' + (doc === "receipt" ? '<span class="stamp" aria-hidden="true">Received</span>' : "") + esc(DOCS[doc]) + '</div>' +
+      '<div class="dsub"><span>No. <b>' + esc(p.code) + '</b></span><span>Date <b>' + esc(p.year) + '</b></span><span>' + (pick ? "Wave" : "Rack") + ' <b>' + esc(rackName) + '</b></span><span>Ref <b>' + esc(p.slug) + '</b></span></div></div>' +
+      '<div class="bc">' + S.barcode(p.code, 54) + '<small>' + esc(p.code) + '</small></div></header>';
+    if (doc === "delivery") h += '<div class="hz" aria-hidden="true"></div>';
+    h += '<div class="copies" aria-hidden="true"><span class="on">Original</span><span>File copy</span><span>Page 1 / 1</span></div>';
+    h += '<div class="dbody">';
+    h += '<span class="eyebrow">' + esc(p.kind) + '</span><h1>' + esc(p.title) + ' <span class="acc">' + esc(p.titleAccent) + '</span></h1>';
+    if (p.lede) h += '<p class="lede">' + esc(p.lede) + '</p>';
+    if (p.meta && p.meta.length) { h += '<div class="meta">'; p.meta.forEach(function (m) { m = m || {}; h += '<div><small>' + esc(m.label) + '</small><span>' + esc(m.value) + '</span></div>'; }); h += '</div>'; }
+    h += '<figure class="fig"><canvas data-viz="' + esc(p.visual || "") + '"' + (p.image ? ' data-image="' + esc(p.image) + '"' : "") + ' aria-hidden="true"></canvas><figcaption><span>Fig. 01 · ' + esc(p.visual || "generic") + '</span>' + esc(p.visualCaption || "") + '</figcaption></figure>';
+    if (p.numbers && p.numbers.length) {
+      h += '<div class="nums" aria-label="Numbers">';
+      p.numbers.forEach(function (n, k) {
+        n = n || {}; var v = +n.value || 0;
+        h += '<div class="num"><div class="nh">' + esc(QTY[doc]) + ' · ' + pad2(k) + '</div><b>' + esc(n.prefix || "") + '<span data-to="' + v + '"' + (n.comma ? ' data-fmt="1"' : "") + '>' + S.fmt(v, !!n.comma) + '</span>' + (n.suffix ? '<span class="sfx">' + esc(n.suffix) + '</span>' : "") + '</b><span>' + esc(n.label) + '</span>' + (doc === "count" ? '<div class="sys">System<i></i></div>' : "") + '</div>';
+      });
+      h += '</div>';
+    }
+    h += '<div class="lines">';
+    [["Problem", p.problem], ["Approach", p.approach], ["Result", p.result]].forEach(function (s, k) {
+      var o = s[1] || {};
+      h += '<div class="line"><div class="ln"><b>' + pad2(k) + '</b><small>' + s[0] + '</small></div><div>' + (pick ? '<span class="box" aria-hidden="true" style="margin-right:10px"></span>' : "") + '<h3 style="display:inline">' + esc(o.title) + '</h3><p>' + esc(o.text) + '</p></div></div>';
+    });
+    h += '</div>';
+    if (p.details && p.details.length) {
+      var blocks = p.details.map(function (b) { return block(b, doc); }).join("");
+      if (blocks) h += '<section class="dsec"><h2>' + esc(p.detailTitle) + ' <span class="acc">' + esc(p.detailAccent) + '</span></h2><div class="blocks">' + blocks + '</div></section>';
+    }
+    h += '<div class="dfoot"><div>' + (p.tags && p.tags.length ? '<div class="tags">' + p.tags.map(function (t) { return "<span>" + esc(t) + "</span>"; }).join("") + '</div>' : "") + (p.note ? '<p class="note">' + esc(p.note) + '</p>' : "") + '</div>' +
+      (p.link && p.link.url ? '<a class="btn primary" href="' + esc(p.link.url) + '">' + esc(p.link.label || "Open") + ' <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>' : "") + '</div>';
+    h += '<div class="sigs"><div class="sig"><small>Prepared by</small><span>Ferdy F. Iskandar</span></div><div class="sig"><small>Checked by</small><span></span></div>' + (doc === "delivery" ? '<div class="sig"><small>Received by</small><span></span></div>' : "") + '</div>';
+    h += '</div>';
+    var prev = all[(i - 1 + all.length) % all.length], next = all[(i + 1) % all.length];
+    h += '<nav class="pn" aria-label="Other documents"><a href="project.html?p=' + encodeURIComponent(prev.slug) + '"><small>Previous · ' + esc(prev.code) + '</small><b>' + esc(prev.short || prev.title) + '</b><em>' + esc(S.rackName(data, prev.rack)) + '</em></a>' +
+      '<a href="project.html?p=' + encodeURIComponent(next.slug) + '"><small>Next · ' + esc(next.code) + '</small><b>' + esc(next.short || next.title) + '</b><em>' + esc(S.rackName(data, next.rack)) + '</em></a></nav>';
+    h += '</article>';
+    out.innerHTML = h;
+    S.reveal(out); S.countUp(out);
+    if (window.Viz) window.Viz.scan();
+    if (window.Sound) window.Sound.stamp();
+    var bars = [].slice.call(out.querySelectorAll(".gauge .tr i"));
+    if (S.isStill() || window.matchMedia("(prefers-reduced-motion: reduce)").matches) bars.forEach(function (b) { b.style.transition = "none"; b.style.setProperty("--w", b.getAttribute("data-w")); });
+    else requestAnimationFrame(function () { requestAnimationFrame(function () { bars.forEach(function (b) { b.style.setProperty("--w", b.getAttribute("data-w")); }); }); });
+  }
+  var slug = q("p");
+  S.projects().then(function (data) {
+    var all = data.projects || [], i = -1;
+    for (var k = 0; k < all.length; k++) if (all[k] && all[k].slug === slug) { i = k; break; }
+    if (i < 0) { notFound(slug); return; }
+    render(data, all[i], i, all);
+  }).catch(function () { notFound(slug); });
+})();
+</script>
+</body>
+</html>

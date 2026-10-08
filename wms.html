@@ -7,115 +7,42 @@
 <meta name="description" content="Case study: connecting stock, shipments, field visits and sell-out for a plush toy brand into one WMS on Google Sheets and Apps Script.">
 <meta property="og:title" content="Five files. Now one WMS.">
 <meta property="og:image" content="poster.jpg">
-
+<meta name="theme-color" content="#F26419">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<style>
-.back{display:inline-flex;gap:8px;font:500 14px/1 var(--mono);color:var(--mut);text-decoration:none;margin-bottom:28px}.back:hover{color:var(--fg)}
-/* Layout: a warehouse ledger. One narrow reading column, the flow set as numbered stock moves, each move paired with its real screen. */
-:root{
-  --ink:#0E1318; --plate:#161D25; --line:#2A3540; --fg:#EEF2F5; --mut:#93A1AE;
-  --rack:#4B7FD6; --table:#2E9A6B; --stack:#E0822F; --over:#D0587A; --ok:#3FCB8C; --hi:#8FC0FF;
-  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
-  --body:"Barlow","Helvetica Neue",Arial,sans-serif;
-  --mono:"IBM Plex Mono",Menlo,Consolas,monospace;
-  color-scheme:dark;
-}
-*{box-sizing:border-box}
-html{background:var(--ink)}
-body{margin:0;background:var(--ink);color:var(--fg);font:400 17px/1.6 var(--body);
-  background-image:linear-gradient(90deg,rgba(255,255,255,.028) 1px,transparent 1px),linear-gradient(rgba(255,255,255,.028) 1px,transparent 1px);
-  background-size:72px 72px}
-.wrap{max-width:1080px;margin:0 auto;padding-inline:clamp(16px,4vw,40px);padding-block:clamp(40px,7vw,88px) 64px}
-a{color:var(--hi)}
-a:focus-visible,video:focus-visible{outline:2px solid var(--hi);outline-offset:3px}
-.eyebrow{font:600 13px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
-h1,h2,h3{font-family:var(--display);text-transform:uppercase;text-wrap:balance;margin:0}
-h1{font-weight:800;font-size:clamp(56px,10vw,128px);line-height:.88;letter-spacing:-.005em;margin-top:18px}
-h1 .acc{color:var(--hi)}
-h2{font-weight:800;font-size:clamp(36px,5vw,56px);line-height:.95}
-h3{font-weight:700;font-size:26px;letter-spacing:.02em;line-height:1.05}
-.lede{max-width:62ch;font-size:clamp(18px,2vw,21px);color:#C9D3DB;margin:22px 0 0}
-.who{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:22px;font:500 14px/1.4 var(--mono);color:var(--mut)}
-.who b{color:var(--fg);font-weight:500}
-section{margin-top:clamp(64px,9vw,112px)}
-.head{display:grid;gap:14px;margin-bottom:28px}
-
-/* video */
-.film{margin-top:40px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#000;box-shadow:0 30px 70px rgba(0,0,0,.45)}
-.film video{display:block;width:100%;height:auto;aspect-ratio:16/9;background:#000}
-.cap{font:400 13px/1.5 var(--mono);color:var(--mut);margin-top:10px}
-
-/* numbers */
-.nums{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-top:28px}
-.num{background:var(--plate);padding:22px 22px 20px;min-width:0}
-.num b{display:block;font:800 clamp(40px,5vw,56px)/1 var(--display);font-variant-numeric:tabular-nums}
-.num b .from{color:var(--mut);font-weight:700;font-size:.6em}
-.num.lead b{color:var(--ok)}
-.num span{display:block;margin-top:8px;font-size:15px;color:var(--mut);line-height:1.4}
-
-/* five files */
-.files{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
-.file{background:var(--plate);border:1px solid var(--line);border-radius:12px;padding:16px 16px 14px;min-width:0}
-.file .fn{display:flex;align-items:center;gap:8px;font:400 14px/1.3 var(--mono);overflow-wrap:anywhere}
-.badge{flex:none;font:700 11px/1 var(--display);letter-spacing:.1em;padding:4px 7px;border-radius:4px;color:#fff}
-.file .k{margin-top:16px;font-size:13px;color:var(--mut)}
-.file .v{font:800 40px/1 var(--display);font-variant-numeric:tabular-nums;color:var(--stack)}
-.file .v.n{color:var(--fg)}
-.note{margin-top:18px;max-width:64ch;color:#C9D3DB}
-
-/* flow */
-.flow{display:grid;gap:clamp(40px,6vw,64px);counter-reset:mv}
-.mv{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(20px,4vw,48px);align-items:center}
-.mv:nth-child(even) .txt{order:2}
-.txt{min-width:0}
-.slot{display:inline-flex;align-items:center;gap:10px;font:500 13px/1 var(--mono);letter-spacing:.08em;color:var(--mut);margin-bottom:12px}
-.slot i{width:28px;height:28px;border-radius:6px;display:grid;place-items:center;font:800 15px/1 var(--display);font-style:normal;color:#fff}
-.txt p{margin:10px 0 0;color:#C9D3DB;max-width:52ch}
-.txt ul{margin:12px 0 0;padding:0;list-style:none;display:grid;gap:6px}
-.txt li{font-size:15px;color:var(--mut);padding-left:16px;position:relative}
-.txt li::before{content:"";position:absolute;left:0;top:.62em;width:7px;height:7px;border-radius:2px;background:var(--line)}
-.shot{margin:0;min-width:0}
-.shot .win{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#F6F1E8;box-shadow:0 22px 50px rgba(0,0,0,.45)}
-.shot .tb{height:26px;background:#1A222B;display:flex;align-items:center;gap:6px;padding:0 10px}
-.shot .tb span{width:8px;height:8px;border-radius:50%;background:#3A4552}
-.shot img{display:block;width:100%;height:auto}
-.shot figcaption{font:400 12px/1.4 var(--mono);color:var(--mut);margin-top:8px}
-.board-pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:28px}
-
-/* how */
-.how{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
-.card{background:var(--plate);border:1px solid var(--line);border-radius:12px;padding:20px 22px;min-width:0}
-.card p{margin:10px 0 0;color:#C9D3DB;font-size:16px}
-.rule{font:400 14px/1.5 var(--mono);color:var(--fg);background:#0F151B;border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:10px}
-.rule + .rule{margin-top:8px}
-.stack{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.stack span{font:400 13px/1 var(--mono);padding:7px 10px;border:1px solid var(--line);border-radius:999px;color:var(--mut)}
-
-footer{margin-top:clamp(72px,10vw,120px);padding-top:28px;border-top:1px solid var(--line);display:grid;gap:10px}
-footer .big{font:800 clamp(40px,6vw,72px)/.9 var(--display);text-transform:uppercase}
-footer .big .acc{color:var(--hi)}
-footer p{margin:0;color:var(--mut);font-size:15px;max-width:70ch}
-
-@media (max-width:760px){
-  .mv{grid-template-columns:minmax(0,1fr)}
-  .mv:nth-child(even) .txt{order:0}
-}
-@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
-</style>
+<link rel="stylesheet" href="site.css">
+<script>document.documentElement.classList.add("js")</script>
 </head>
 <body>
+<a class="skip" href="#cs">Skip to content</a>
+<canvas id="floor" data-scene="floor" aria-hidden="true"></canvas>
 
-<main class="wrap">
+<nav class="top" aria-label="Main">
+  <div class="wrap">
+    <a class="mark" href="index.html" aria-label="Ferdy Febrian Iskandar, home"><i>FI</i><span>Ferdy F. Iskandar</span></a>
+    <button class="menu" type="button" aria-expanded="false" aria-controls="navlinks">Menu</button>
+    <ul id="navlinks">
+      <li><a href="index.html#featured">Featured</a></li>
+      <li><a href="index.html#projects">Projects</a></li>
+      <li><a href="index.html#process">How I work</a></li>
+      <li><a href="index.html#writing">Writing</a></li>
+      <li><a href="index.html#about">About</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="cs" id="cs">
   <header>
     <a class="back" href="index.html">← All projects</a>
     <div class="eyebrow">Case study · Warehouse and retail operations · Aug to Oct 2026</div>
-    <h1>Five files.<br><span class="acc">Now one WMS.</span></h1>
+    <h1>Five files.<span class="acc">Now one WMS.</span></h1>
     <p class="lede">A plush toy brand sold through 8 stores of 3 retailers, and its stock lived in five files that never talked to each other. I connected warehouse, shipments, field visits and sell-out into one system on Google Sheets and Apps Script, as the operations lead, with AI writing the code.</p>
     <div class="who"><span><b>Ferdy Febrian Iskandar</b></span><span>Operations and data</span><span>Jakarta</span></div>
   </header>
 
   <div class="film">
+    <div class="bar"><i aria-hidden="true"></i><span>WMS WALKTHROUGH · 2:00</span></div>
     <video controls playsinline preload="metadata" poster="poster.jpg" aria-label="Two-minute walkthrough of the WMS">
       <source src="wms-2min.mp4" type="video/mp4">
     </video>
@@ -123,20 +50,20 @@ footer p{margin:0;color:var(--mut);font-size:15px;max-width:70ch}
   <div class="cap">2:00 walkthrough. Animated scenes use sample data; real-screen clips come from the live board with retailer names and values blurred.</div>
 
   <div class="nums" aria-label="Results">
-    <div class="num lead"><b><span class="from">16% →</span> 28%</b><span>of stock on store shelves, first measured 22 Aug, 27.7% on 8 Oct</span></div>
-    <div class="num"><b>8</b><span>stores across 3 retailers, served from 1 warehouse</span></div>
-    <div class="num"><b>43</b><span>active SKUs on one movement ledger</span></div>
-    <div class="num"><b>Rp0</b><span>licence cost per month</span></div>
+    <div class="num"><div class="nh">On shelf · 01</div><b class="acc"><span class="sfx" style="font-size:.5em;color:var(--mut)">16% →</span> 28%</b><span>of stock on store shelves, first measured 22 Aug, 27.7% on 8 Oct</span></div>
+    <div class="num"><div class="nh">Stores · 02</div><b>8</b><span>stores across 3 retailers, served from 1 warehouse</span></div>
+    <div class="num"><div class="nh">SKU · 03</div><b>43</b><span>active SKUs on one movement ledger</span></div>
+    <div class="num"><div class="nh">Licence · 04</div><b>Rp0</b><span>licence cost per month</span></div>
   </div>
 
   <section>
     <div class="head"><div class="eyebrow">The problem</div><h2>Five files, five answers</h2></div>
     <div class="files">
-      <div class="file"><div class="fn"><span class="badge" style="background:#217346">XLSX</span>SKU master.xlsx</div><div class="k">Total stock</div><div class="v">2,277</div></div>
-      <div class="file"><div class="fn"><span class="badge" style="background:#217346">XLSX</span>PO principal.xlsx</div><div class="k">Incoming</div><div class="v n">+360</div></div>
-      <div class="file"><div class="fn"><span class="badge" style="background:#0F9D58">SHEETS</span>Stock HO</div><div class="k">Total stock</div><div class="v">2,239</div></div>
-      <div class="file"><div class="fn"><span class="badge" style="background:#0F9D58">SHEETS</span>Daily sales</div><div class="k">Total stock</div><div class="v">1,979</div></div>
-      <div class="file"><div class="fn"><span class="badge" style="background:#5B6B7A">XLS</span>Partner sales.xls</div><div class="k">Sold</div><div class="v n">?</div></div>
+      <div class="file"><div class="fn"><span class="badge">XLSX</span>SKU master.xlsx</div><div class="k">Total stock</div><div class="v">2,277</div></div>
+      <div class="file"><div class="fn"><span class="badge">XLSX</span>PO principal.xlsx</div><div class="k">Incoming</div><div class="v n">+360</div></div>
+      <div class="file"><div class="fn"><span class="badge x">SHEETS</span>Stock HO</div><div class="k">Total stock</div><div class="v">2,239</div></div>
+      <div class="file"><div class="fn"><span class="badge x">SHEETS</span>Daily sales</div><div class="k">Total stock</div><div class="v">1,979</div></div>
+      <div class="file"><div class="fn"><span class="badge">XLS</span>Partner sales.xls</div><div class="k">Sold</div><div class="v n">?</div></div>
     </div>
     <p class="note">The stock count on 14 August gave three different totals for the same warehouse. Every number was typed again by hand, deliveries to stores had no proof, field visits could not be checked, and partner reports arrived as PDF or Excel in a different shape each time. So the ask was simple: connect it all.</p>
   </section>
@@ -144,34 +71,34 @@ footer p{margin:0;color:var(--mut);font-size:15px;max-width:70ch}
   <section>
     <div class="head"><div class="eyebrow">What I built</div><h2>One flow, shelf to sell-out</h2></div>
     <div class="flow">
-      <article class="mv">
-        <div class="txt"><div class="slot"><i style="background:var(--rack)">1</i>INBOUND</div><h3>Every carton gets a slot</h3>
+      <article class="mv2">
+        <div class="txt"><div class="slot2"><i>1</i><span>INBOUND</span></div><h3>Every carton gets a slot</h3>
           <p>The principal's PO lands in X-IN. Each carton is scanned into a rack location, and anything not put away stays visible as overflow.</p></div>
         <figure class="shot"><div class="win"><div class="tb"><span></span><span></span><span></span></div><img src="r1.jpg" alt="Warehouse condition page with stock at HO, storage and overflow totals" loading="lazy" width="1280" height="607"></div><figcaption>Warehouse condition: scans feed the location master.</figcaption></figure>
       </article>
-      <article class="mv">
-        <div class="txt"><div class="slot"><i style="background:var(--table)">2</i>WAREHOUSE CONDITION</div><h3>Every shelf, accounted for</h3>
+      <article class="mv2">
+        <div class="txt"><div class="slot2"><i>2</i><span>WAREHOUSE CONDITION</span></div><h3>Every shelf, accounted for</h3>
           <p>A live map of racks, tables and stacks with fill levels. Quantity per rack has to match HO stock, and every count correction is logged with who, when and why.</p></div>
         <figure class="shot"><div class="win"><div class="tb"><span></span><span></span><span></span></div><img src="r2.jpg" alt="Location map with rack slots and fill bars" loading="lazy" width="1280" height="607"></div><figcaption>Location map: slot, SKU, quantity against capacity.</figcaption></figure>
       </article>
-      <article class="mv">
-        <div class="txt"><div class="slot"><i style="background:var(--stack)">3</i>OUTBOUND</div><h3>Pick, pack, prove it</h3>
+      <article class="mv2">
+        <div class="txt"><div class="slot2"><i>3</i><span>OUTBOUND</span></div><h3>Pick, pack, prove it</h3>
           <p>Pickers scan the slot first, then the SKU. A delivery order cannot be issued when the store requires a PO number and none is entered.</p></div>
         <figure class="shot"><div class="win"><div class="tb"><span></span><span></span><span></span></div><img src="r3.jpg" alt="Warehouse outbound page with picking, packing, staging, transit and delivered counts" loading="lazy" width="1280" height="607"></div><figcaption>Outbound: picking to delivered.</figcaption></figure>
       </article>
-      <article class="mv">
-        <div class="txt"><div class="slot"><i style="background:var(--over)">4</i>SHIPMENTS</div><h3>Closed only on receipt</h3>
+      <article class="mv2">
+        <div class="txt"><div class="slot2"><i>4</i><span>SHIPMENTS</span></div><h3>Closed only on receipt</h3>
           <p>Every shipment moves through five stages and only closes when the store confirms it arrived, so a stalled parcel shows up the same day.</p></div>
         <figure class="shot"><div class="win"><div class="tb"><span></span><span></span><span></span></div><img src="r4.jpg" alt="Shipments at a glance with open, in warehouse, on the road and received" loading="lazy" width="1280" height="607"></div><figcaption>Shipments at a glance.</figcaption></figure>
       </article>
-      <article class="mv">
-        <div class="txt"><div class="slot"><i style="background:var(--rack)">5</i>FIELD OP APP</div><h3>From the shelf, straight to the board</h3>
+      <article class="mv2">
+        <div class="txt"><div class="slot2"><i>5</i><span>FIELD OP APP</span></div><h3>From the shelf, straight to the board</h3>
           <p>Store staff use a phone app that writes to the same ledger.</p>
           <ul><li>Check-in only inside 300 m of the store, with a selfie</li><li>Shelf counts become ledger rows, variances flagged</li><li>Shelf photos trigger a Google Chat alert</li><li>Check-out computes hours on site</li></ul></div>
         <figure class="shot"><div class="win"><div class="tb"><span></span><span></span><span></span></div><img src="r5.jpg" alt="Operational PIC work log with days worked, stores visited and selfies" loading="lazy" width="1280" height="607"></div><figcaption>Field work log, counted from the app.</figcaption></figure>
       </article>
-      <article class="mv">
-        <div class="txt"><div class="slot"><i style="background:var(--table)">6</i>SELL-OUT</div><h3>Every sale, one ledger</h3>
+      <article class="mv2">
+        <div class="txt"><div class="slot2"><i>6</i><span>SELL-OUT</span></div><h3>Every sale, one ledger</h3>
           <p>Partner sales reports in PDF or Excel are read into ledger rows, so sell-out per store and SKU is visible, including the SKUs that never sold.</p></div>
         <figure class="shot"><div class="win"><div class="tb"><span></span><span></span><span></span></div><img src="r6.jpg" alt="SKU performance with core SKUs, never sold and share of units sold" loading="lazy" width="1280" height="540"></div><figcaption>SKU performance.</figcaption></figure>
       </article>
@@ -195,13 +122,25 @@ footer p{margin:0;color:var(--mut);font-size:15px;max-width:70ch}
         <div class="stack"><span>Google Sheets</span><span>Apps Script</span><span>Google Chat</span><span>Excel scan station</span></div></div>
     </div>
   </section>
+</main>
 
-  <footer>
+<div class="hz" aria-hidden="true" style="margin-top:clamp(64px,9vw,112px)"></div>
+<footer class="csfoot">
+  <div class="wrap lead">
     <div class="big">Five files. <span class="acc">Now one WMS.</span></div>
     <p>Ferdy Febrian Iskandar, operations and data. <a href="https://www.linkedin.com/in/ferdy-febrian-iskandar">LinkedIn</a> · <a href="index.html">All projects</a></p>
     <p>Store and retailer names, values and on-screen figures in the screenshots are blurred or shown as sample data.</p>
-  </footer>
-</main>
+  </div>
+  <canvas class="beltline" data-scene="belt" aria-hidden="true"></canvas>
+  <div class="wrap"><span>© 2026 Ferdy Febrian Iskandar · Jakarta</span><span><a href="https://www.linkedin.com/in/ferdy-febrian-iskandar">LinkedIn</a> · <a href="https://github.com/Ferdyfi24">GitHub</a> · <a href="https://medium.com/@iskandarferdy559">Medium</a></span></div>
+</footer>
 
+<div class="panel" role="group" aria-label="Site controls">
+  <button class="sw" id="motion" type="button" aria-pressed="true" aria-label="Motion: animations are on. Press to stop them."><span class="st" aria-hidden="true"></span><span class="lamp" aria-hidden="true"><i></i></span><span class="txt">MOTION ON</span></button>
+  <button class="sw" id="sound" type="button" aria-pressed="false" aria-label="Sound: UI sounds are off. Press to turn them on."><span class="st" aria-hidden="true"></span><span class="lamp" aria-hidden="true"><i></i></span><span class="txt">SOUND OFF</span></button>
+</div>
+<script src="sound.js"></script>
+<script src="site.js"></script>
+<script src="viz.js"></script>
 </body>
 </html>

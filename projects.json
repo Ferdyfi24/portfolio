@@ -1,0 +1,1085 @@
+{
+  "_readme": "One entry per project. Order here is the order on the site. To add a project, copy one entry, change the values, and commit. See ADD-A-PROJECT.md.",
+  "racks": {
+    "ops": "Ops & supply chain",
+    "hack": "Hackathons",
+    "data": "Data analytics"
+  },
+  "projects": [
+    {
+      "slug": "ledger",
+      "code": "R1-01",
+      "rack": "ops",
+      "kind": "Synthetic data",
+      "year": "2026",
+      "doc": "count",
+      "title": "Warehouse",
+      "titleAccent": "ledger pattern",
+      "short": "Warehouse ledger pattern",
+      "summary": "Stock is never stored as a figure. It is derived from an append-only movement ledger.",
+      "cardPoints": [
+        "**Seven rules** enforced by the database",
+        "**Sixteen assertions**, each rule removed once to prove the tests catch it"
+      ],
+      "lede": "A Postgres schema for consignment and third-party warehouse stock where stock is never stored as a figure. It is recomputed from an append-only movement ledger, so it has nowhere to drift to.",
+      "meta": [
+        {
+          "label": "Stack",
+          "value": "PostgreSQL 14+, PL/pgSQL"
+        },
+        {
+          "label": "Data",
+          "value": "Synthetic, clean-room"
+        },
+        {
+          "label": "Origin",
+          "value": "A real consignment operation"
+        }
+      ],
+      "visual": "ledger",
+      "visualCaption": "LEDGER · stock = SUM(movements)",
+      "numbers": [
+        {
+          "value": 7,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "rules the database enforces itself"
+        },
+        {
+          "value": 16,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "assertions, all executed"
+        },
+        {
+          "value": 0,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "columns anywhere that store stock"
+        }
+      ],
+      "problem": {
+        "title": "Two sources of truth",
+        "text": "A stored stock figure has two sources of truth the moment anything goes wrong: the figure, and the transactions behind it. When they disagree there is no way to tell which is right, and adjusting the figure destroys the only evidence."
+      },
+      "approach": {
+        "title": "Nothing to disagree with",
+        "text": "Stock is a view, the sum of movements per barcode and location. A correction is a contra row that points at the row it corrects. The ledger refuses updates and deletes."
+      },
+      "result": {
+        "title": "Every balance has a trail",
+        "text": "Every figure traces back to the rows that produced it. A count's variance is an output, never written back automatically, because a count that has seen the expected figure proves nothing."
+      },
+      "detailTitle": "Seven rules,",
+      "detailAccent": "each enforced by the database",
+      "details": [
+        {
+          "type": "code",
+          "text": "create view stok as\n  select barcode, lokasi, sum(jumlah)::integer as jumlah\n    from mutasi group by barcode, lokasi having sum(jumlah) <> 0;"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Rule",
+            "Enforced by"
+          ],
+          "rows": [
+            [
+              "01",
+              "The ledger only appends",
+              "A trigger that refuses update and delete"
+            ],
+            [
+              "02",
+              "Every row records who and when",
+              "Not null plus a non-blank check, now() default"
+            ],
+            [
+              "03",
+              "A correction is a contra row, never an edit",
+              "A check: a correction must point at the row it corrects"
+            ],
+            [
+              "04",
+              "Stock has no column anywhere",
+              "It is a view, and a test asserts no such column exists"
+            ],
+            [
+              "05",
+              "Delivered quantity per order is computed",
+              "A view over issued delivery notes; no column accepts it"
+            ],
+            [
+              "06",
+              "A delivery note cannot be issued empty",
+              "A trigger on the transition to issued"
+            ],
+            [
+              "07",
+              "A count cannot be signed off unowned",
+              "A check requiring who counted it"
+            ]
+          ]
+        },
+        {
+          "type": "callout",
+          "title": "Mutation pass.",
+          "text": "After the tests run, the script removes each rule from the schema in turn and requires the tests to go red. A test that cannot fail adds confidence without adding evidence."
+        }
+      ],
+      "tags": [
+        "PostgreSQL",
+        "PL/pgSQL",
+        "Mutation testing",
+        "Data modelling"
+      ],
+      "link": {
+        "label": "View code on GitHub",
+        "url": "https://github.com/Ferdyfi24/warehouse-ledger-pattern"
+      },
+      "note": "Clean-room version of the data model from a real consignment operation. None of it is anyone's operational data."
+    },
+    {
+      "slug": "po-parser",
+      "code": "R1-02",
+      "rack": "ops",
+      "kind": "From real reconciliations",
+      "year": "2026",
+      "doc": "po",
+      "title": "PO line",
+      "titleAccent": "parser",
+      "short": "PO line parser",
+      "summary": "Reads barcode and quantity out of partner purchase-order lines, and refuses rather than guesses.",
+      "cardPoints": [
+        "Born from a nine-line order stored as **1, 2, 3 up to 9 pcs**",
+        "**13 assertions**, 5 mutation cases"
+      ],
+      "lede": "Reads barcode and quantity out of partner purchase-order lines, and refuses rather than guesses. Every trap it handles cost a real reconciliation before it was understood.",
+      "meta": [
+        {
+          "label": "Stack",
+          "value": "Node.js"
+        },
+        {
+          "label": "Input",
+          "value": "Text lines from any PDF or sheet"
+        },
+        {
+          "label": "Output",
+          "value": "Read lines, and refused lines with a reason"
+        }
+      ],
+      "visual": "po",
+      "visualCaption": "PO-2611-0042 · reading lines",
+      "numbers": [
+        {
+          "value": 4,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "traps that each produced a plausible wrong number"
+        },
+        {
+          "value": 13,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "assertions"
+        },
+        {
+          "value": 5,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "mutation cases, each must turn the tests red"
+        }
+      ],
+      "problem": {
+        "title": "Plausible and wrong",
+        "text": "Each trap produced a number that looked entirely reasonable on screen. Nothing looked broken until the goods were counted at the counter."
+      },
+      "approach": {
+        "title": "One question, answered strictly",
+        "text": "Take an array of text lines, whatever produced them, and answer one question: which barcodes were ordered, and how many of each. Anything it cannot read with confidence is listed as rejected, with the reason."
+      },
+      "result": {
+        "title": "The tests got fixed too",
+        "text": "On the first mutation run two tests stayed green with the parser deliberately broken, which meant they proved nothing. The tests were the thing that got fixed."
+      },
+      "detailTitle": "Why this is not",
+      "detailAccent": "two lines of regex",
+      "details": [
+        {
+          "type": "cards",
+          "items": [
+            {
+              "title": "A phone number is twelve digits. So is a barcode.",
+              "text": "Match on length and every letterhead becomes a phantom order line.",
+              "fix": "Compute the EAN check digit. Known internal codes still pass."
+            },
+            {
+              "title": "The quantity is not the last small number",
+              "text": "Take the last small number and a box number at the end of the line wins, silently.",
+              "fix": "Read the number standing in front of the unit: EA, PCS, CTN."
+            },
+            {
+              "title": "A quantity written \"6.\" with a trailing dot",
+              "text": "The dot pushed the quantity out, and the row index was left. A nine-line order was stored as 1, 2, 3 up to 9 pcs.",
+              "fix": "Drop a trailing dot. A dot inside a number stays a thousands separator."
+            },
+            {
+              "title": "A PDF table that is not row by row",
+              "text": "One export gives nine barcodes, then nine descriptions, then nine quantities.",
+              "fix": "Pair by order only when the counts match exactly. Otherwise refuse."
+            }
+          ]
+        }
+      ],
+      "tags": [
+        "Node.js",
+        "Parsing",
+        "Testing",
+        "Mutation testing"
+      ],
+      "link": {
+        "label": "View code on GitHub",
+        "url": "https://github.com/Ferdyfi24/po-line-parser"
+      },
+      "note": "Barcodes and lines on this page are illustrative. A tidy table where everything is off by one is more dangerous than a document that admits it could not be read."
+    },
+    {
+      "slug": "replenishment",
+      "code": "S1-01",
+      "rack": "hack",
+      "kind": "DQLab Excel Hackathon · Sep 2026",
+      "year": "2026",
+      "doc": "picking",
+      "title": "Inventory",
+      "titleAccent": "replenishment audit",
+      "short": "Inventory replenishment audit",
+      "summary": "Demand profile, min and max levels, reorder decisions and warehouse capacity for a distributor.",
+      "cardPoints": [
+        "Final score **100 / 100**",
+        "Reorder logic carried **60%** of the grade"
+      ],
+      "lede": "Demand profile, min and max levels, reorder decisions and warehouse capacity for a distributor, built in Excel for the DQLab x UjiKompetensi hackathon.",
+      "meta": [
+        {
+          "label": "Stack",
+          "value": "Excel"
+        },
+        {
+          "label": "Case",
+          "value": "A daily goods distributor"
+        },
+        {
+          "label": "Score",
+          "value": "100 / 100"
+        }
+      ],
+      "visual": "repl",
+      "visualCaption": "STOCK vs ROP and MAX",
+      "numbers": [
+        {
+          "value": 100,
+          "prefix": "",
+          "suffix": "/100",
+          "comma": false,
+          "label": "final score"
+        },
+        {
+          "value": 4,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "graded tasks"
+        },
+        {
+          "value": 60,
+          "prefix": "",
+          "suffix": "%",
+          "comma": false,
+          "label": "of the grade on reorder logic"
+        }
+      ],
+      "problem": {
+        "title": "When, how much, and will it fit",
+        "text": "A distributor needs to know when to reorder each item, how much to order, and whether the warehouse can hold what arrives."
+      },
+      "approach": {
+        "title": "Four tasks, one chain",
+        "text": "Profile demand, set minimum and maximum stock levels, decide each reorder from those levels, then check the result against warehouse capacity."
+      },
+      "result": {
+        "title": "100 out of 100",
+        "text": "Full marks on the third submission, with the reorder logic carrying most of the weight."
+      },
+      "detailTitle": "Where the grade",
+      "detailAccent": "came from",
+      "details": [
+        {
+          "type": "bars",
+          "items": [
+            {
+              "label": "Task 1 · Demand profile",
+              "value": 15,
+              "suffix": "%"
+            },
+            {
+              "label": "Task 2 · Min and max levels",
+              "value": 15,
+              "suffix": "%"
+            },
+            {
+              "label": "Task 3 · Reorder decisions",
+              "value": 60,
+              "suffix": "%"
+            },
+            {
+              "label": "Task 4 · Warehouse capacity",
+              "value": 10,
+              "suffix": "%"
+            }
+          ]
+        }
+      ],
+      "tags": [
+        "Excel",
+        "Inventory planning",
+        "Min / max",
+        "Reorder point"
+      ],
+      "link": {
+        "label": "Ask for the case study",
+        "url": "https://www.linkedin.com/in/ferdy-febrian-iskandar"
+      },
+      "note": "The hackathon files are not published. The full case study is available on request."
+    },
+    {
+      "slug": "basket",
+      "code": "S1-02",
+      "rack": "hack",
+      "kind": "DQLab Python Hackathon · 2026",
+      "year": "2026",
+      "doc": "picking",
+      "title": "Retail",
+      "titleAccent": "basket analysis",
+      "short": "Retail basket analysis",
+      "summary": "Which SKUs are rising and which ones sell together.",
+      "cardPoints": [
+        "**42,446** retail transactions analysed",
+        "**13** rising-star SKUs, **20** bundling rules"
+      ],
+      "lede": "Which SKUs are rising, and which ones sell together, from retail transaction data.",
+      "meta": [
+        {
+          "label": "Stack",
+          "value": "Python"
+        },
+        {
+          "label": "Method",
+          "value": "Association rules"
+        },
+        {
+          "label": "Scale",
+          "value": "42,446 transactions"
+        }
+      ],
+      "visual": "basket",
+      "visualCaption": "SKU network · bought together",
+      "numbers": [
+        {
+          "value": 42446,
+          "prefix": "",
+          "suffix": "",
+          "comma": true,
+          "label": "retail transactions analysed"
+        },
+        {
+          "value": 13,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "rising-star SKUs"
+        },
+        {
+          "value": 20,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "bundling rules"
+        }
+      ],
+      "problem": {
+        "title": "What to push, what to pair",
+        "text": "A retailer wants to know which products are gaining, and which products customers already buy together."
+      },
+      "approach": {
+        "title": "Two passes over the same data",
+        "text": "Growth per SKU to find the rising stars, then association rules over baskets to find products bought together."
+      },
+      "result": {
+        "title": "A short list to act on",
+        "text": "13 rising-star SKUs to give space to, and 20 bundling rules to build offers from."
+      },
+      "detailTitle": "From transactions",
+      "detailAccent": "to a shelf decision",
+      "details": [
+        {
+          "type": "cards",
+          "items": [
+            {
+              "title": "Rising stars",
+              "text": "SKUs whose sales are growing. These are the ones to keep in stock and give shelf space to first."
+            },
+            {
+              "title": "Bundles",
+              "text": "Pairs that appear in the same basket more often than chance. These become bundle offers and neighbouring shelf slots."
+            }
+          ]
+        }
+      ],
+      "tags": [
+        "Python",
+        "pandas",
+        "Association rules",
+        "Retail"
+      ],
+      "link": null,
+      "note": "Hackathon dataset provided by DQLab. Code is not published."
+    },
+    {
+      "slug": "procurement",
+      "code": "S1-03",
+      "rack": "hack",
+      "kind": "DQLab SQL Hackathon · 2026",
+      "year": "2026",
+      "doc": "po",
+      "title": "Procurement",
+      "titleAccent": "anomaly check",
+      "short": "Procurement anomaly check",
+      "summary": "Spotting procurement records that do not fit their regional pattern.",
+      "cardPoints": [
+        "**509** records across 4 regional groups",
+        "**20 anomalies (3.9%)** flagged by z-score"
+      ],
+      "lede": "Spotting procurement records that do not fit their regional pattern, written in SQL.",
+      "meta": [
+        {
+          "label": "Stack",
+          "value": "SQL"
+        },
+        {
+          "label": "Method",
+          "value": "Z-score within each region"
+        },
+        {
+          "label": "Scale",
+          "value": "509 records"
+        }
+      ],
+      "visual": "anom",
+      "visualCaption": "z-score per region · outliers flagged",
+      "numbers": [
+        {
+          "value": 509,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "procurement records"
+        },
+        {
+          "value": 4,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "regional groups"
+        },
+        {
+          "value": 20,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "anomalies flagged, 3.9%"
+        }
+      ],
+      "problem": {
+        "title": "Unusual for whom?",
+        "text": "A procurement value that is normal in one region can be unusual in another. One threshold for the whole dataset hides both."
+      },
+      "approach": {
+        "title": "Judge each record against its peers",
+        "text": "Compute a z-score for every record within its own regional group, then flag the records that sit far outside their group."
+      },
+      "result": {
+        "title": "A review list, not an accusation",
+        "text": "20 records, 3.9% of the total, flagged for someone to look at first."
+      },
+      "detailTitle": "Why",
+      "detailAccent": "per region",
+      "details": [
+        {
+          "type": "cards",
+          "items": [
+            {
+              "title": "One global threshold",
+              "text": "High-cost regions get flagged for being themselves, and real outliers in low-cost regions slip through."
+            },
+            {
+              "title": "A threshold per region",
+              "text": "Every record is compared with the records around it. What is flagged is unusual where it happened."
+            }
+          ]
+        }
+      ],
+      "tags": [
+        "SQL",
+        "Z-score",
+        "Anomaly detection",
+        "Procurement"
+      ],
+      "link": null,
+      "note": "Hackathon dataset provided by DQLab. Code is not published."
+    },
+    {
+      "slug": "lpg-distribution",
+      "code": "T1-01",
+      "rack": "data",
+      "kind": "Simulated data",
+      "year": "2026",
+      "doc": "delivery",
+      "title": "LPG distribution",
+      "titleAccent": "efficiency",
+      "short": "LPG distribution efficiency",
+      "summary": "Demand against fulfilment, return rate and delivery speed for a 3 kg LPG sub-agent in West Sumatra.",
+      "cardPoints": [
+        "**250 accounts** over 18 months",
+        "Delivery from about **1.5 days** in Area A to **3.1 days** in Area C"
+      ],
+      "lede": "Demand against fulfilment, return rate and delivery speed for a Pertamina-authorized 3 kg LPG sub-agent in Tanah Datar, West Sumatra.",
+      "meta": [
+        {
+          "label": "Stack",
+          "value": "Python, pandas, Matplotlib, Seaborn"
+        },
+        {
+          "label": "Period",
+          "value": "Dec 2024 to May 2026"
+        },
+        {
+          "label": "Scale",
+          "value": "About 2,000 cylinders a month"
+        }
+      ],
+      "visual": "lpg",
+      "visualCaption": "DEPOT to three coverage areas",
+      "numbers": [
+        {
+          "value": 250,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "accounts: 25 retailers, 225 buyers"
+        },
+        {
+          "value": 18,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "months of data"
+        },
+        {
+          "value": 3,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "coverage areas"
+        },
+        {
+          "value": 5,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "charts for allocation and reorders"
+        }
+      ],
+      "problem": {
+        "title": "Uneven, leaky, competitive",
+        "text": "Demand was uneven across three coverage areas, some cylinders came back leaking or defective, and neighbouring agents competed on delivery speed."
+      },
+      "approach": {
+        "title": "Five analyses",
+        "text": "Demand against fulfilment, demand variance per area with the coefficient of variation, return rate against a 0.5% per cycle benchmark, delivery speed per area, and the top and bottom retailers."
+      },
+      "result": {
+        "title": "Where to spend the effort",
+        "text": "Delivery took about 1.5 days in Area A and 3.1 days in Area C. The charts point allocation and reorder planning at the areas that need it."
+      },
+      "detailTitle": "Three areas,",
+      "detailAccent": "three speeds",
+      "details": [
+        {
+          "type": "table",
+          "columns": [
+            "Area",
+            "Average delivery"
+          ],
+          "rows": [
+            [
+              "A",
+              "Urban core",
+              "About 1.5 days"
+            ],
+            [
+              "B",
+              "Semi-urban",
+              "About 2.2 days"
+            ],
+            [
+              "C",
+              "Rural fringe",
+              "About 3.1 days"
+            ]
+          ]
+        }
+      ],
+      "tags": [
+        "Python",
+        "pandas",
+        "Matplotlib",
+        "Seaborn"
+      ],
+      "link": {
+        "label": "View code on GitHub",
+        "url": "https://github.com/Ferdyfi24/lgp-distribution-analysis"
+      },
+      "note": "Dataset simulated from my own experience as distribution and operations staff at the sub-agent. Figures follow realistic operating parameters, not real records."
+    },
+    {
+      "slug": "lpg-forecast",
+      "code": "T1-02",
+      "rack": "data",
+      "kind": "Simulated data",
+      "year": "2026",
+      "doc": "delivery",
+      "title": "LPG demand",
+      "titleAccent": "forecasting",
+      "short": "LPG demand forecasting",
+      "summary": "Which simple method forecasts monthly demand per area best, to time allocation and reorders.",
+      "cardPoints": [
+        "SMA-3, WMA-3 and exponential smoothing compared on **MAE and MAPE**"
+      ],
+      "lede": "Which simple method forecasts monthly LPG demand per area best, so allocation and reorders can be timed.",
+      "meta": [
+        {
+          "label": "Stack",
+          "value": "Python, pandas, NumPy"
+        },
+        {
+          "label": "Period",
+          "value": "Dec 2024 to May 2026"
+        },
+        {
+          "label": "Scored on",
+          "value": "MAE and MAPE"
+        }
+      ],
+      "visual": "fc",
+      "visualCaption": "ACTUAL vs SMA-3, WMA-3, SES",
+      "numbers": [
+        {
+          "value": 3,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "methods compared"
+        },
+        {
+          "value": 18,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "months of history"
+        },
+        {
+          "value": 3,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "areas forecast separately"
+        },
+        {
+          "value": 3,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "months projected ahead"
+        }
+      ],
+      "problem": {
+        "title": "Allocation is a forecast",
+        "text": "Every monthly allocation is a guess about next month. A better guess means fewer empty shelves and less stock sitting in the wrong area."
+      },
+      "approach": {
+        "title": "Simple methods, scored honestly",
+        "text": "Three methods any operator can explain, run per area and scored on mean absolute error and mean absolute percentage error."
+      },
+      "result": {
+        "title": "A method per area",
+        "text": "The most accurate method for each area, and a three-month projection from June to August 2026 for allocation planning."
+      },
+      "detailTitle": "The three",
+      "detailAccent": "methods",
+      "details": [
+        {
+          "type": "table",
+          "columns": [
+            "Method",
+            "How it works"
+          ],
+          "rows": [
+            [
+              "SMA-3",
+              "Simple moving average",
+              "The average of the last three months"
+            ],
+            [
+              "WMA-3",
+              "Weighted moving average",
+              "Last three months weighted 0.5, 0.3 and 0.2"
+            ],
+            [
+              "SES",
+              "Simple exponential smoothing",
+              "Alpha 0.4: recent months count more, older months fade"
+            ]
+          ]
+        }
+      ],
+      "tags": [
+        "Python",
+        "Forecasting",
+        "MAE / MAPE",
+        "Planning"
+      ],
+      "link": {
+        "label": "View code on GitHub",
+        "url": "https://github.com/Ferdyfi24/-lgp-demand-forecasting"
+      },
+      "note": "Dataset simulated from real operating experience. For portfolio purposes."
+    },
+    {
+      "slug": "rfm",
+      "code": "T1-03",
+      "rack": "data",
+      "kind": "Simulated data",
+      "year": "2026",
+      "doc": "count",
+      "title": "Customer",
+      "titleAccent": "segmentation",
+      "short": "Customer segmentation (RFM)",
+      "summary": "Segmenting buyers to prioritise deliveries and catch accounts that are slipping away.",
+      "cardPoints": [
+        "RFM scores, then **K-Means with k = 4** across **250 accounts**"
+      ],
+      "lede": "Segmenting 250 distribution accounts by how recently, how often and how much they buy, to prioritise deliveries and catch accounts that are slipping away.",
+      "meta": [
+        {
+          "label": "Stack",
+          "value": "Python, scikit-learn, Seaborn"
+        },
+        {
+          "label": "Method",
+          "value": "RFM, then K-Means"
+        },
+        {
+          "label": "Scale",
+          "value": "250 accounts"
+        }
+      ],
+      "visual": "rfm",
+      "visualCaption": "250 accounts · K-Means, k = 4",
+      "numbers": [
+        {
+          "value": 250,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "accounts segmented"
+        },
+        {
+          "value": 4,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "segments, k chosen by elbow and silhouette"
+        },
+        {
+          "value": 5,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "score levels for each of R, F and M"
+        }
+      ],
+      "problem": {
+        "title": "Not every account is equal",
+        "text": "With limited trucks and cylinders, treating every account the same means the best ones wait and the fading ones go unnoticed."
+      },
+      "approach": {
+        "title": "Score, then cluster",
+        "text": "Recency, frequency and monetary value per account, scored in quintiles, then K-Means with k = 4, chosen with the elbow method and silhouette score."
+      },
+      "result": {
+        "title": "A plan per segment",
+        "text": "Champions, Loyal, At Risk and Lost, each with its own action for delivery priority and account follow-up."
+      },
+      "detailTitle": "What each segment",
+      "detailAccent": "gets",
+      "details": [
+        {
+          "type": "cards",
+          "items": [
+            {
+              "title": "Champions",
+              "text": "Fastest delivery promise first; loyalty pricing."
+            },
+            {
+              "title": "Loyal",
+              "text": "Regular contact; offer larger order packages."
+            },
+            {
+              "title": "At risk",
+              "text": "Reach out before they leave; find out why orders dropped."
+            },
+            {
+              "title": "Lost",
+              "text": "Check if reactivation is worth it; move quota to active accounts."
+            }
+          ]
+        }
+      ],
+      "tags": [
+        "Python",
+        "scikit-learn",
+        "K-Means",
+        "RFM"
+      ],
+      "link": {
+        "label": "View code on GitHub",
+        "url": "https://github.com/Ferdyfi24/lgp-rfm-segmentation"
+      },
+      "note": "Dataset simulated from real operating experience. For portfolio purposes."
+    },
+    {
+      "slug": "ops-dashboard",
+      "code": "T1-04",
+      "rack": "data",
+      "kind": "Simulated data",
+      "year": "2026",
+      "doc": "receipt",
+      "title": "Ops & SCM",
+      "titleAccent": "dashboard",
+      "short": "Ops & SCM dashboard",
+      "summary": "The three LPG studies in one Streamlit app, with an adjustable smoothing factor for the forecast.",
+      "cardPoints": [
+        "Four pages: overview, distribution, forecasting, segmentation"
+      ],
+      "lede": "The three LPG studies in one Streamlit app, so the analysis can be explored instead of read.",
+      "meta": [
+        {
+          "label": "Stack",
+          "value": "Streamlit, Python, scikit-learn"
+        },
+        {
+          "label": "Pages",
+          "value": "4"
+        },
+        {
+          "label": "Data",
+          "value": "Simulated, generated in the app"
+        }
+      ],
+      "visual": "dash",
+      "visualCaption": "Streamlit · four pages",
+      "numbers": [
+        {
+          "value": 4,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "pages"
+        },
+        {
+          "value": 3,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "studies in one place"
+        },
+        {
+          "value": 250,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "accounts"
+        }
+      ],
+      "problem": {
+        "title": "Three studies, three files",
+        "text": "Distribution, forecasting and segmentation each lived in their own script and charts."
+      },
+      "approach": {
+        "title": "One app with controls",
+        "text": "A filter by area, a smoothing slider for the forecast, an area picker, and a segment filter on the account table."
+      },
+      "result": {
+        "title": "Ask it, do not read it",
+        "text": "The best forecasting method is picked by MAPE for whatever area is selected, and each segment comes with its recommended action."
+      },
+      "detailTitle": "What is",
+      "detailAccent": "on each page",
+      "details": [
+        {
+          "type": "table",
+          "columns": [
+            "Page",
+            "What you can do"
+          ],
+          "rows": [
+            [
+              "01",
+              "Overview",
+              "Accounts, monthly volume, fulfilment rate and the return benchmark at a glance"
+            ],
+            [
+              "02",
+              "Distribution",
+              "Filter by area; demand against fulfilment, return rate, delivery time"
+            ],
+            [
+              "03",
+              "Forecasting",
+              "Move the smoothing factor from 0.1 to 0.9, pick an area, see the best method"
+            ],
+            [
+              "04",
+              "Segmentation",
+              "Segment sizes, frequency against volume, actions, and the account list per segment"
+            ]
+          ]
+        }
+      ],
+      "tags": [
+        "Streamlit",
+        "Python",
+        "pandas",
+        "scikit-learn"
+      ],
+      "link": {
+        "label": "View code on GitHub",
+        "url": "https://github.com/Ferdyfi24/ops-scm-dashboard"
+      },
+      "note": "Data is simulated inside the app from realistic operating parameters."
+    },
+    {
+      "slug": "finance",
+      "code": "T1-05",
+      "rack": "data",
+      "kind": "Simulated data",
+      "year": "2026",
+      "doc": "receipt",
+      "title": "Finance analytics",
+      "titleAccent": "dashboard",
+      "short": "Finance analytics dashboard",
+      "summary": "Sector performance on the Indonesia Stock Exchange and an LQ45 portfolio optimiser.",
+      "cardPoints": [
+        "**10 sectors**, 2022 to 2024",
+        "Up to **5,000** Monte Carlo runs"
+      ],
+      "lede": "Sector performance on the Indonesia Stock Exchange from 2022 to 2024, and a mean-variance optimiser over a universe of LQ45 stocks.",
+      "meta": [
+        {
+          "label": "Stack",
+          "value": "Streamlit, SciPy, NumPy"
+        },
+        {
+          "label": "Universe",
+          "value": "10 sectors, 20 LQ45 stocks"
+        },
+        {
+          "label": "Data",
+          "value": "Simulated assumptions"
+        }
+      ],
+      "visual": "fin",
+      "visualCaption": "Monte Carlo portfolios · efficient frontier",
+      "numbers": [
+        {
+          "value": 10,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "IDX sectors, 2022 to 2024"
+        },
+        {
+          "value": 20,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "LQ45 stocks in the universe"
+        },
+        {
+          "value": 5000,
+          "prefix": "",
+          "suffix": "",
+          "comma": true,
+          "label": "Monte Carlo runs at most"
+        }
+      ],
+      "problem": {
+        "title": "Return is half the story",
+        "text": "A sector or a portfolio that returns more is only better if the risk taken to get there is worth it."
+      },
+      "approach": {
+        "title": "Markowitz, made interactive",
+        "text": "Annual returns, a return heatmap and a risk-return scatter by sector. Then portfolio weights optimised for the highest Sharpe ratio and for the lowest variance."
+      },
+      "result": {
+        "title": "Adjustable, not fixed",
+        "text": "The number of simulations and the risk-free rate are sliders, so the frontier can be redrawn under different assumptions."
+      },
+      "detailTitle": "Two",
+      "detailAccent": "portfolios",
+      "details": [
+        {
+          "type": "cards",
+          "items": [
+            {
+              "title": "Max Sharpe",
+              "text": "The weights with the most return per unit of risk above the risk-free rate."
+            },
+            {
+              "title": "Min variance",
+              "text": "The weights with the lowest volatility the universe allows."
+            }
+          ]
+        }
+      ],
+      "tags": [
+        "Streamlit",
+        "SciPy",
+        "Optimisation",
+        "Monte Carlo"
+      ],
+      "link": {
+        "label": "View code on GitHub",
+        "url": "https://github.com/Ferdyfi24/finance-analytics-dashboard"
+      },
+      "note": "Simulated data based on realistic assumptions, for education and portfolio purposes. Not financial advice."
+    }
+  ]
+}
