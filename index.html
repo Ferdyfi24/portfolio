@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ferdy Febrian Iskandar · Operations and data</title>
+<meta name="description" content="Operations and systems: warehouse, consignment distribution, and the software underneath them. Projects by Ferdy Febrian Iskandar.">
+<meta property="og:title" content="Ferdy Febrian Iskandar · Operations and data">
+<meta property="og:image" content="poster.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a stock ledger of work. Name and stance up top, one featured case, then projects filed by shelf: ops and supply chain, data analytics. */
+:root{
+  --ink:#0E1318; --plate:#161D25; --plate2:#1B242E; --line:#2A3540; --fg:#EEF2F5; --soft:#C9D3DB; --mut:#93A1AE;
+  --rack:#4B7FD6; --table:#2E9A6B; --stack:#E0822F; --over:#D0587A; --ok:#3FCB8C; --hi:#8FC0FF;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow","Helvetica Neue",Arial,sans-serif;
+  --mono:"IBM Plex Mono",Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--ink);scroll-behavior:smooth}
+body{margin:0;background:var(--ink);color:var(--fg);font:400 17px/1.6 var(--body);
+  background-image:linear-gradient(90deg,rgba(255,255,255,.028) 1px,transparent 1px),linear-gradient(rgba(255,255,255,.028) 1px,transparent 1px);background-size:72px 72px}
+a{color:var(--hi)}
+a:focus-visible{outline:2px solid var(--hi);outline-offset:3px;border-radius:4px}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:clamp(16px,4vw,40px)}
+nav{position:sticky;top:0;z-index:5;background:rgba(14,19,24,.88);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:60px;flex-wrap:wrap}
+.mark{font:800 22px/1 var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--fg);text-decoration:none}
+nav ul{display:flex;gap:22px;list-style:none;margin:0;padding:0;flex-wrap:wrap}
+nav ul a{font:500 14px/1 var(--mono);color:var(--mut);text-decoration:none}
+nav ul a:hover{color:var(--fg)}
+.eyebrow{font:500 13px/1.3 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+h1,h2,h3{font-family:var(--display);text-transform:uppercase;text-wrap:balance;margin:0}
+.hero{padding-block:clamp(56px,9vw,112px) clamp(40px,6vw,72px)}
+.hero h1{font-weight:800;font-size:clamp(52px,9vw,120px);line-height:.88;margin-top:16px}
+.hero h1 .acc{color:var(--hi)}
+.hero p{max-width:60ch;font-size:clamp(18px,2vw,21px);color:var(--soft);margin:24px 0 0}
+.links{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.btn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border-radius:10px;border:1px solid var(--line);background:var(--plate);color:var(--fg);text-decoration:none;font:500 15px/1 var(--mono)}
+.btn:hover{border-color:var(--mut)}
+.btn.primary{background:var(--hi);border-color:var(--hi);color:#0B1622}
+section{padding-block:clamp(48px,7vw,88px);border-top:1px solid var(--line)}
+.shead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+.shead h2{font-weight:800;font-size:clamp(36px,5vw,58px);line-height:.92}
+.shead p{margin:0;max-width:46ch;color:var(--mut);font-size:16px}
+
+/* featured */
+.feat{display:grid;grid-template-columns:minmax(0,6fr) minmax(0,5fr);gap:clamp(20px,4vw,48px);align-items:center;background:var(--plate);border:1px solid var(--line);border-radius:18px;padding:clamp(18px,3vw,32px);text-decoration:none;color:inherit}
+.feat:hover{border-color:#3A4856}
+.feat img{display:block;width:100%;height:auto;border-radius:10px;border:1px solid var(--line)}
+.feat h3{font-weight:800;font-size:clamp(34px,4.4vw,52px);line-height:.92;margin-top:10px}
+.feat h3 .acc{color:var(--hi)}
+.feat p{color:var(--soft);margin:14px 0 0}
+.kpis{display:flex;flex-wrap:wrap;gap:10px 22px;margin-top:18px}
+.kpi b{display:block;font:800 34px/1 var(--display);font-variant-numeric:tabular-nums}
+.kpi b.up{color:var(--ok)}
+.kpi span{font-size:14px;color:var(--mut)}
+.more{display:inline-block;margin-top:18px;font:500 14px/1 var(--mono);color:var(--hi)}
+
+/* project grid */
+.shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.card{display:flex;flex-direction:column;gap:12px;background:var(--plate);border:1px solid var(--line);border-radius:14px;padding:22px;min-width:0}
+.card .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.loc{font:500 12px/1 var(--mono);letter-spacing:.1em;padding:6px 8px;border-radius:5px;color:#fff}
+.data{font:400 12px/1 var(--mono);color:var(--mut)}
+.card h3{font-weight:700;font-size:28px;line-height:1;letter-spacing:.01em}
+.card p{margin:0;color:var(--soft);font-size:16px}
+.card ul{margin:0;padding:0;list-style:none;display:grid;gap:6px}
+.card li{font-size:15px;color:var(--mut);padding-left:16px;position:relative}
+.card li::before{content:"";position:absolute;left:0;top:.6em;width:6px;height:6px;border-radius:2px;background:#3A4856}
+.card li b{color:var(--fg);font-weight:600}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:6px}
+.tags span{font:400 12px/1 var(--mono);padding:6px 9px;border:1px solid var(--line);border-radius:999px;color:var(--mut)}
+.card .go{font:500 14px/1 var(--mono);color:var(--hi);text-decoration:none;align-self:flex-start;min-height:24px}
+.card .go:hover{text-decoration:underline}
+.card .nolink{font:400 13px/1.3 var(--mono);color:var(--mut)}
+
+/* about */
+.about{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:clamp(20px,4vw,48px)}
+.about p{margin:0 0 14px;color:var(--soft);max-width:62ch}
+.facts{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;align-self:start}
+.fact{background:var(--plate);padding:16px 18px}
+.fact small{display:block;font:500 12px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
+.fact div{margin-top:6px}
+
+footer{border-top:1px solid var(--line);padding-block:40px 56px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-end}
+footer .big{font:800 clamp(34px,5vw,56px)/.9 var(--display);text-transform:uppercase}
+footer small{color:var(--mut);font-size:14px}
+
+@media (max-width:820px){.feat,.about{grid-template-columns:minmax(0,1fr)}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<nav aria-label="Main">
+  <div class="wrap">
+    <a class="mark" href="#top">Ferdy F. Iskandar</a>
+    <ul>
+      <li><a href="#work">Work</a></li>
+      <li><a href="#ops">Ops &amp; supply chain</a></li>
+      <li><a href="#data">Data analytics</a></li>
+      <li><a href="#about">About</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main id="top">
+  <header class="hero wrap">
+    <div class="eyebrow">Operations and data · Jakarta</div>
+    <h1>Operations and systems.<br><span class="acc">The software underneath them.</span></h1>
+    <p>I work on warehouse and consignment distribution, and I build the tools that keep its numbers honest: a WMS on Google Sheets and Apps Script, ledger patterns, parsers and dashboards. I own the business rules and the testing; AI writes most of the code.</p>
+    <div class="links">
+      <a class="btn primary" href="wms.html">Featured case study</a>
+      <a class="btn" href="https://www.linkedin.com/in/ferdy-febrian-iskandar">LinkedIn</a>
+      <a class="btn" href="https://github.com/Ferdyfi24">GitHub</a>
+      <a class="btn" href="https://medium.com/@iskandarferdy559">Medium</a>
+    </div>
+  </header>
+
+  <section id="work" class="wrap">
+    <div class="shead"><h2>Featured</h2><p>The system I run at work, end to end, with real screens from the live board.</p></div>
+    <a class="feat" href="wms.html">
+      <img src="poster.jpg" alt="Title frame of the WMS walkthrough video: So I built a WMS" width="1920" height="1080">
+      <div>
+        <div class="eyebrow">Case study · WMS · Aug to Oct 2026</div>
+        <h3>Five files.<br><span class="acc">Now one WMS.</span></h3>
+        <p>A plush toy brand's stock lived in five files that never talked to each other. I connected inbound, warehouse slots, shipments, a field app for store visits and partner sell-out into one ledger.</p>
+        <div class="kpis">
+          <div class="kpi"><b class="up">16% → 28%</b><span>stock on store shelves</span></div>
+          <div class="kpi"><b>8</b><span>stores, 3 retailers</span></div>
+          <div class="kpi"><b>43</b><span>active SKUs</span></div>
+        </div>
+        <span class="more">Read the case study and watch the 2-minute video →</span>
+      </div>
+    </a>
+  </section>
+
+  <section id="ops" class="wrap">
+    <div class="shead"><h2>Ops &amp; supply chain</h2><p>Warehouse records, purchase orders and replenishment. Each one started from a real problem in daily operations.</p></div>
+    <div class="shelf">
+      <article class="card">
+        <div class="top"><span class="loc" style="background:#2F5FA8">R1-01</span><span class="data">Synthetic data</span></div>
+        <h3>Warehouse ledger pattern</h3>
+        <p>Stock is never stored as a figure. It is derived from an append-only movement ledger, so a balance can always be traced to its transactions.</p>
+        <ul><li><b>Seven rules</b> enforced by the database: append-only, who and when on every row, corrections as contra rows</li><li><b>Sixteen assertions</b>, each rule proven by removing it and watching the tests fail</li></ul>
+        <div class="tags"><span>PostgreSQL</span><span>PL/pgSQL</span><span>Mutation testing</span></div>
+        <a class="go" href="https://github.com/Ferdyfi24/warehouse-ledger-pattern">View on GitHub →</a>
+      </article>
+      <article class="card">
+        <div class="top"><span class="loc" style="background:#2F5FA8">R1-02</span><span class="data">From real reconciliations</span></div>
+        <h3>PO line parser</h3>
+        <p>Reads barcode and quantity out of partner purchase-order lines, and refuses rather than guesses.</p>
+        <ul><li>Born from a nine-line order that got stored as <b>1, 2, 3 up to 9 pcs</b></li><li>EAN check digit keeps phone numbers out; <b>13 assertions</b> and 5 mutation cases</li></ul>
+        <div class="tags"><span>Node.js</span><span>Testing</span></div>
+        <a class="go" href="https://github.com/Ferdyfi24/po-line-parser">View on GitHub →</a>
+      </article>
+      <article class="card">
+        <div class="top"><span class="loc" style="background:#2F5FA8">R1-03</span><span class="data">Hackathon case</span></div>
+        <h3>Inventory replenishment audit</h3>
+        <p>DQLab Excel Hackathon, September 2026: demand profile, min and max levels, reorder decisions and warehouse capacity for a distributor.</p>
+        <ul><li>Final score <b>100 / 100</b></li><li>Reorder logic carried 60% of the grade</li></ul>
+        <div class="tags"><span>Excel</span><span>Inventory planning</span></div>
+        <span class="nolink">Case study PDF on request</span>
+      </article>
+      <article class="card">
+        <div class="top"><span class="loc" style="background:#2F5FA8">R1-04</span><span class="data">Hackathon case</span></div>
+        <h3>Retail basket analysis</h3>
+        <p>DQLab Python Hackathon 2026: which SKUs are rising and which ones sell together.</p>
+        <ul><li><b>42,446</b> retail transactions analysed</li><li><b>13</b> rising-star SKUs, <b>20</b> bundling rules</li></ul>
+        <div class="tags"><span>Python</span><span>Association rules</span></div>
+      </article>
+      <article class="card">
+        <div class="top"><span class="loc" style="background:#2F5FA8">R1-05</span><span class="data">Hackathon case</span></div>
+        <h3>Procurement anomaly check</h3>
+        <p>DQLab SQL Hackathon 2026: spotting procurement records that do not fit their regional pattern.</p>
+        <ul><li><b>509</b> procurement records across 4 regional groups</li><li><b>20 anomalies (3.9%)</b> flagged by z-score</li></ul>
+        <div class="tags"><span>SQL</span><span>Anomaly detection</span></div>
+      </article>
+    </div>
+  </section>
+
+  <section id="data" class="wrap">
+    <div class="shead"><h2>Data analytics</h2><p>Distribution and finance case studies. The LPG series uses data simulated from real operating experience at a 3 kg LPG sub-agent in West Sumatra.</p></div>
+    <div class="shelf">
+      <article class="card">
+        <div class="top"><span class="loc" style="background:#23805A">T1-01</span><span class="data">Simulated data</span></div>
+        <h3>LPG distribution efficiency</h3>
+        <p>Demand against fulfilment, return rate and delivery speed across three areas.</p>
+        <ul><li><b>250 accounts</b> over 18 months, about 2,000 cylinders a month</li><li>Delivery time from about <b>1.5 days</b> in Area A to <b>3.1 days</b> in Area C</li></ul>
+        <div class="tags"><span>Python</span><span>Pandas</span><span>Seaborn</span></div>
+        <a class="go" href="https://github.com/Ferdyfi24/lgp-distribution-analysis">View on GitHub →</a>
+      </article>
+      <article class="card">
+        <div class="top"><span class="loc" style="background:#23805A">T1-02</span><span class="data">Simulated data</span></div>
+        <h3>LPG demand forecasting</h3>
+        <p>Which simple method forecasts monthly demand per area best, to time allocation and reorders.</p>
+        <ul><li>SMA-3, WMA-3 and exponential smoothing compared on <b>MAE and MAPE</b></li><li>Three-month projection for allocation planning</li></ul>
+        <div class="tags"><span>Python</span><span>Forecasting</span></div>
+        <a class="go" href="https://github.com/Ferdyfi24/-lgp-demand-forecasting">View on GitHub →</a>
+      </article>
+      <article class="card">
+        <div class="top"><span class="loc" style="background:#23805A">T1-03</span><span class="data">Simulated data</span></div>
+        <h3>Customer segmentation (RFM)</h3>
+        <p>Segmenting buyers to prioritise deliveries and catch accounts that are slipping away.</p>
+        <ul><li>RFM quintile scores, then <b>K-Means with k = 4</b></li><li>Champions, Loyal, At Risk and Lost across <b>250 accounts</b></li></ul>
+        <div class="tags"><span>Python</span><span>scikit-learn</span></div>
+        <a class="go" href="https://github.com/Ferdyfi24/lgp-rfm-segmentation">View on GitHub →</a>
+      </article>
+      <article class="card">
+        <div class="top"><span class="loc" style="background:#23805A">T1-04</span><span class="data">Simulated data</span></div>
+        <h3>Ops &amp; SCM dashboard</h3>
+        <p>The three LPG studies in one Streamlit app, with an adjustable smoothing factor for the forecast.</p>
+        <ul><li>Four pages: overview, distribution, forecasting, segmentation</li></ul>
+        <div class="tags"><span>Streamlit</span><span>Python</span></div>
+        <a class="go" href="https://github.com/Ferdyfi24/ops-scm-dashboard">View on GitHub →</a>
+      </article>
+      <article class="card">
+        <div class="top"><span class="loc" style="background:#23805A">T1-05</span><span class="data">Simulated data</span></div>
+        <h3>Finance analytics dashboard</h3>
+        <p>Sector performance on the Indonesia Stock Exchange and an LQ45 portfolio optimiser.</p>
+        <ul><li><b>10 sectors</b>, 2022 to 2024</li><li>Markowitz max Sharpe and min variance, up to <b>5,000</b> Monte Carlo runs</li></ul>
+        <div class="tags"><span>Streamlit</span><span>SciPy</span></div>
+        <a class="go" href="https://github.com/Ferdyfi24/finance-analytics-dashboard">View on GitHub →</a>
+      </article>
+    </div>
+  </section>
+
+  <section id="about" class="wrap">
+    <div class="shead"><h2>About</h2></div>
+    <div class="about">
+      <div>
+        <p>I come from the business side, not software engineering. My work sits where the warehouse, the stores and the numbers meet: where stock really is, whether a delivery can be proven, and whether a report can be trusted.</p>
+        <p>When a process breaks, I write down the rule it should never break again, then build the smallest tool that enforces it, with AI writing most of the code and tests proving each rule holds.</p>
+      </div>
+      <div class="facts">
+        <div class="fact"><small>Education</small><div>Management, Universitas Andalas · GPA 3.79 / 4.00 · Best Graduate of Class</div></div>
+        <div class="fact"><small>Certifications</small><div>Google Analytics (92 / 100) · HubSpot CRM (89 / 100)</div></div>
+        <div class="fact"><small>Tools</small><div>Google Sheets, Apps Script, SQL, Python, Excel, Streamlit</div></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="big">Ferdy Febrian Iskandar</div>
+    <small><a href="https://www.linkedin.com/in/ferdy-febrian-iskandar">LinkedIn</a> · <a href="https://github.com/Ferdyfi24">GitHub</a> · <a href="https://medium.com/@iskandarferdy559">Medium</a></small>
+  </div>
+</footer>
+</body>
+</html>
