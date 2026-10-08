@@ -19,7 +19,7 @@
       "summary": "Stock is never stored as a figure. It is derived from an append-only movement ledger.",
       "cardPoints": [
         "**Seven rules** enforced by the database",
-        "**Sixteen assertions**, each rule removed once to prove the tests catch it"
+        "**16 assertions**, then 4 rules removed one at a time to prove the tests catch them"
       ],
       "lede": "A Postgres schema for consignment and third-party warehouse stock where stock is never stored as a figure. It is recomputed from an append-only movement ledger, so it has nowhere to drift to.",
       "meta": [
@@ -126,8 +126,41 @@
         },
         {
           "type": "callout",
+          "title": "A typo, corrected without editing anything.",
+          "text": "24 bears go from the warehouse to a mall counter. The counter keys a sale of 30 instead of 3. Nobody edits the sale row: a correction row of +27 points at it, and stock is right again. Below is the real output from the repo's schema on a clean database."
+        },
+        {
+          "type": "code",
+          "text": " id | sebab   | lokasi | jumlah | koreksi_atas\n  4 | KIRIM   | WH1    |    -24 |\n  5 | KIRIM   | S101   |     24 |\n  6 | JUAL    | S101   |    -30 |\n  7 | KOREKSI | S101   |     27 |            6\n\nstok:  WH1 376   S101 21\n\nupdate mutasi set jumlah = -3 ...\nERROR: ledger is append only:\n       use a contra row (sebab = KOREKSI)"
+        },
+        {
+          "type": "cards",
+          "items": [
+            {
+              "title": "Why not just fix the sale row?",
+              "text": "Because the wrong row is evidence. Someone keyed 30, and the correction says who fixed it, when, and which row it answers. Edit the row and that history is gone.",
+              "fix": "Corrections are rows that point at rows"
+            },
+            {
+              "title": "Why is a count only an output?",
+              "text": "A physical count that has already seen the expected figure tends to agree with it. So the variance is reported, and nothing writes it back into the ledger on its own.",
+              "fix": "A person decides, and that decision is a row too"
+            },
+            {
+              "title": "What it leaves out",
+              "text": "No pricing, costing, users or API. Those belong to whatever system adopts the pattern. This is only the shape of the record underneath, which is the part usually got wrong.",
+              "fix": "A pattern, not a product"
+            }
+          ]
+        },
+        {
+          "type": "callout",
           "title": "Mutation pass.",
-          "text": "After the tests run, the script removes each rule from the schema in turn and requires the tests to go red. A test that cannot fail adds confidence without adding evidence."
+          "text": "After the 16 assertions pass, the script rebuilds the database four times, each time with one rule removed, and requires the tests to go red. All four did."
+        },
+        {
+          "type": "code",
+          "text": "uji balik:\n  merah  drop trigger mutasi_tanpa_ubah\n  merah  drop constraint koreksi_wajib_beralasan\n  merah  drop trigger sj_tidak_boleh_kosong\n  merah  drop constraint selesai_butuh_nama\n\nsemua uji lulus, dan semuanya terbukti bisa gagal."
         }
       ],
       "tags": [
@@ -236,6 +269,63 @@
               "fix": "Pair by order only when the counts match exactly. Otherwise refuse."
             }
           ]
+        },
+        {
+          "type": "callout",
+          "title": "One messy order, read.",
+          "text": "A letterhead with a phone number and a tax number, a quantity written \"6.\", a price written 175.000, a twelve-digit number that is not a valid barcode, and a box number at the end of a line. Real output from the repo:"
+        },
+        {
+          "type": "code",
+          "text": "PT Contoh Ritel  Telp 021-555-0199\n1  8991234567891  Plush Bear S  6.  PCS  175.000\n2  899123456789   Key ring      4 PCS\n3  8991234567907  Tote bag      2 CTN  Box 12\nHubungi 081234567890\n\n-> { barcode: 8991234567891, qty: 6 }\n-> { barcode: 8991234567907, qty: 2 }"
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Trap",
+            "Without the rule"
+          ],
+          "rows": [
+            [
+              "01",
+              "Phone number in the letterhead",
+              "A phantom order line to check by hand"
+            ],
+            [
+              "02",
+              "\"6.\" with a trailing dot",
+              "Row index read as the quantity: 1, 2, 3 up to 9"
+            ],
+            [
+              "03",
+              "Box number at the end of the line",
+              "Quantity 12 instead of 2, silently"
+            ],
+            [
+              "04",
+              "Price 175.000",
+              "A price read as an order of 175,000"
+            ],
+            [
+              "05",
+              "Columns exported one after another",
+              "Every quantity shifted onto the wrong item"
+            ],
+            [
+              "06",
+              "Same barcode twice on a page",
+              "Counted twice"
+            ]
+          ]
+        },
+        {
+          "type": "callout",
+          "title": "Mutation pass.",
+          "text": "13 assertions, then each trap is removed from the parser in turn and the tests must go red. On the first run two tests stayed green with the parser broken. Those two tests were rewritten, not the parser."
+        },
+        {
+          "type": "code",
+          "text": "13 lulus, 0 gagal\nmerah  digit pemeriksa EAN tidak dihitung\nmerah  jumlah tidak dicari dari satuannya\nmerah  titik di belakang angka tidak dibuang\nmerah  cara urutan dipakai walau jumlahnya tidak sama\nmerah  kode berulang dihitung berkali-kali"
         }
       ],
       "tags": [
