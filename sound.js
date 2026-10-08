@@ -22,7 +22,9 @@
      caster     a floor carton starting to roll (floor grid)
      settle     a floor carton set down at its node
      tap        hover: a soft cardboard tap on a project card, certificate tag or the featured card (site.js)
-     tick       hover: a tiny tick on buttons, chips and nav links (site.js)
+     tick       hover: a tiny tick on chips, nav links and other small controls (site.js)
+     button     hover: a panel key under the finger, on buttons and social links
+     press()    click on a button or social link: key down, key up, a short confirm beep
      scan       hover: a soft scanner beep on a project card, certificate tag, the featured card or a post
      badge      hover: a door reader accepting the access pass in About
      zone       a section heading coming into view: the scanner reading a location label, once per section
@@ -223,6 +225,20 @@
   };
   /* roll, for the level check only: the trolley bed at full scroll speed. Live playback goes through S.roll() */
   SND.roll = function (c, d, t) { var r = rollBed(c, d); r.g.gain.setValueAtTime(LEVEL.roll, t); r.src.stop(t + 2); return 2; };
+  /* button: hover on a button or social link, a finger resting on a panel key: a soft contact and a low blip */
+  SND.button = function (c, d, t) {
+    burst(c, d, t, .006, .17, "bandpass", 1900, 0, 1.4);
+    tone(c, d, t + .004, "sine", 1650, 1650, .035, .003, .16);
+    return .08;
+  };
+  /* press: clicking a button or social link, a panel key pushed down and let go, then a short confirm beep */
+  SND.press = function (c, d, t) {
+    burst(c, d, t, .01, .3, "bandpass", 1500, 0, 1.1);            /* key down */
+    tone(c, d, t, "sine", 260, 160, .04, .002, .14);                /* the body of the key */
+    burst(c, d, t + .055, .008, .16, "highpass", 2600, 0, .6);     /* key up */
+    tone(c, d, t + .07, "sine", 2200, 2200, .06, .003, .26);        /* confirm */
+    return .2;
+  };
   /* tick: hover on a button, chip or link */
   SND.tick = function (c, d, t) {
     burst(c, d, t, .005, .12, "highpass", 3200, 0, .5);
@@ -261,6 +277,7 @@
     return true;
   }
   S.beep = function () { return play("beep"); };
+  S.press = function () { return play("press"); };
   S.clack = function () { return play("clack"); };
   S.beeper = function () { return play("beeper"); };
   /* one stamp per arrival: the carried stamp and the document's own stamp may both ask within a second */
@@ -274,7 +291,7 @@
   S.stamp = function () { if (!on) return false; if (!stampOnce()) { pendingStamp = true; return false; } return true; };
 
   /* cues from the scenes and from hover; sound.js decides whether they play */
-  var CAT = { caster: "floor", settle: "floor", tap: "hover", scan: "hover", tick: "hover", badge: "hover", zone: "zone" }, GAP = { floor: .9, hover: .05, hero: .06, zone: .35 }, lastCat = {};
+  var CAT = { caster: "floor", settle: "floor", tap: "hover", scan: "hover", tick: "hover", badge: "hover", button: "hover", zone: "zone" }, GAP = { floor: .9, hover: .05, hero: .06, zone: .35 }, lastCat = {};
   S.cue = function (name, o) {
     if (!on || !ctx || !SND[name] || !running()) return false;
     var cat = CAT[name] || "hero", key = cat === "hero" ? name : cat; /* hero cues may overlap each other, so they throttle per name */

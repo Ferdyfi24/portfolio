@@ -87,9 +87,11 @@
     var S = snd(), t = e.target;
     if (!S || e.pointerType !== "mouse" || !t || !t.closest) return;
     if (performance.now() - lastScroll < 250) return; /* the page moved under a resting pointer, that is not a hover */
-    var small = t.closest("button, .chip, nav.top ul a, .btn, .back, .allposts, .more, .qcbtn, .pn a"), big = t.closest(".slot, .qctag, .feat, .post"), pass = t.closest(".idpass");
+    var key = t.closest(".btn, .qcbtn, footer a"), small = t.closest("button, .chip, nav.top ul a, .back, .allposts, .more, .pn a"), big = t.closest(".slot, .qctag, .feat, .post"), pass = t.closest(".idpass");
     var rel = e.relatedTarget;
-    if (small && !(rel && small.contains(rel))) S.cue("tick");
+    if (key && !(rel && key.contains(rel))) S.cue("button");
+    else if (key) return;
+    else if (small && !(rel && small.contains(rel))) S.cue("tick");
     else if (big && !(rel && big.contains(rel))) S.cue("scan");
     else if (pass && !(rel && pass.contains(rel))) S.cue("badge");
   }, { passive: true });
@@ -135,6 +137,15 @@
     if (!a) return;
     var S = snd();
     if (S && (a.closest(".slot") || a.classList.contains("primary") || a.classList.contains("feat"))) S.beep();
+    else if (S && a.closest(".btn, .qcbtn, footer, .allposts, .post")) S.press();
+    /* a link that leaves the site (LinkedIn, GitHub, Medium, a verify page) waits a moment so the press is heard */
+    if (S && S.isOn() && !S.isLocked() && a.origin !== location.origin && !e.defaultPrevented && e.button === 0 &&
+        !(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) && (!a.target || a.target === "_self") && /^https?:/i.test(a.href)) {
+      e.preventDefault();
+      var out = a.href;
+      setTimeout(function () { location.href = out; }, 160);
+      return;
+    }
     if (!isInternal(a)) return;
     if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     if (S) S.carryStamp();
