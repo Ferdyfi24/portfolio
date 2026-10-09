@@ -114,7 +114,7 @@ h1 .w{display:block;color:#FFFFFF;font-size:52px;line-height:.95;margin-top:14px
 .zone{position:absolute;right:64px;bottom:78px;background:#F26419;border:3px solid #121212;padding:8px 12px;font-size:19px;letter-spacing:.18em;font-weight:800}
 </style></head><body>
 <div class="art">${rackSvg()}</div>
-<div class="copy"><span class="status mono"><i></i>Operations and data · Jakarta</span>
+<div class="copy"><span class="status mono"><i></i>Business operations · Jakarta</span>
 <h1 class="cond">Ferdy Febrian<br>Iskandar<br><span class="w">Operations and systems.<br>And the software underneath.</span></h1></div>
 <div class="addr mono"><b>WWW</b>${SITE}</div>
 <div class="zone mono">RACK A · 01</div>
