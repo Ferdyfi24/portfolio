@@ -266,6 +266,8 @@ section.wrap{padding-top:clamp(64px,9vw,120px)}
 .fact small{font:500 11px/1.4 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mut);padding-top:3px}
 .stack{display:flex;flex-wrap:wrap;gap:6px}
 .stack span{font:400 12px/1 var(--mono);padding:6px 8px;border:1px solid var(--ink)}
+@media (max-width:560px){.fact{grid-template-columns:minmax(0,1fr);gap:6px}}
+.skills{display:grid;gap:12px}.skg{display:grid;gap:6px}.skg b{font:500 11px/1.4 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink)}
 @media (max-width:820px){.about{grid-template-columns:minmax(0,1fr)}}
 
 /* ---- access pass: the portrait, worn on a lanyard like a DC badge ---- */
