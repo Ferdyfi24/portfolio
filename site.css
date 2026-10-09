@@ -99,7 +99,7 @@ nav.top ul a:hover,nav.top ul a.on{border-bottom-color:var(--or);color:var(--ink
 
 /* ---- tools belt: pallet tags moving along a strip ---- */
 .belt{background:var(--white);border-bottom:3px solid var(--ink);overflow:hidden;position:relative}
-.belt .track{display:flex;width:max-content;animation:belt 48s linear infinite}
+.belt .track{display:flex;width:max-content;animation:belt 60s linear infinite}
 .belt .mv{display:flex;align-items:center;gap:12px;padding:14px 28px 14px 0;white-space:nowrap;font-size:15px;color:var(--mut);border-right:1px solid var(--rule);margin-right:28px}
 .belt .mv i{font:800 12px/1 var(--mono);font-style:normal;letter-spacing:.1em;color:var(--ink);background:var(--or);padding:7px 8px;border:2px solid var(--ink)}
 .belt .mv b{color:var(--ink);font-weight:600}
