@@ -8,7 +8,7 @@ Plain static site, no build step, no libraries. Deployed on Cloudflare Pages str
 
 - `index.html`: home page. The project rack is rendered in the browser from `projects.json`; everything else is static HTML.
 - `project.html`: one template for every project page. It reads `?p=<slug>` and renders the project as a warehouse document (stock count sheet, purchase order, picking list, delivery note or goods receipt). An unknown slug shows a "not found in this rack" page.
-- `wms.html`: case study "Five files. Now one WMS." with the 2-minute walkthrough video and real screens.
+- `wms.html`: case study "Five files. Now one WMS." with the 2:23 walkthrough video (three problems, one WMS) and real screens.
 - `projects.json`: the single source of truth for all projects. The field reference is in the comment at the top of the script in `project.html`.
 - `site.css`: all styles. One safety orange, white, ink and two greys.
 - `site.js`: the MOTION and SOUND switches, page transitions, barcodes, count-up, the rack and its filters, nav.
@@ -19,7 +19,7 @@ Plain static site, no build step, no libraries. Deployed on Cloudflare Pages str
 - `functions/_middleware.js` with `_routes.json`: a Cloudflare Pages Function that writes each project's own title and preview image into `/project` pages for link previews, and builds `/sitemap.xml` from `projects.json`.
 - `robots.txt`, `favicon.svg`, `favicon-32.png`, `apple-touch-icon.png`, `og-card.png` and `og/<slug>.png` (link preview images).
 - `tools/og.mjs`: regenerates the preview images and icons with Playwright (`node tools/og.mjs og`).
-- Media: `poster.jpg`, `hero-poster.jpg`, `hero-loop.mp4`, `wms-2min.mp4`, `r1.jpg` to `r9.jpg`.
+- Media: `poster-3p.jpg`, `hero-poster-3p.jpg`, `hero-loop-3p.mp4`, `wms-3problems.mp4`, `r1.jpg` to `r9.jpg`. The old `poster.jpg`, `hero-poster.jpg`, `hero-loop.mp4` and `wms-2min.mp4` are no longer used by any page.
 
 ## Adding a project
 
