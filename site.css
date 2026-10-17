@@ -545,3 +545,25 @@ html.still *,html.still *::before,html.still *::after{animation-play-state:pause
   html.fb body{animation:none}
 }
 @media print{.panel,#floor,nav.top{display:none}}
+
+/* project videos (17 Oct 2026): vertical reels side by side under the sketch, one column on phones */
+.reels{display:grid;grid-template-columns:repeat(2,minmax(0,300px));gap:20px;margin:24px 0 0;justify-content:start}
+.reel{margin:0;border:2px solid var(--ink);background:#fff}
+.reel video{display:block;width:100%;aspect-ratio:9/16;background:var(--ink);object-fit:cover}
+.reel figcaption{padding:9px 12px;border-top:2px solid var(--ink);display:flex;flex-direction:column;gap:3px}
+.reel figcaption span{font:500 11px/1.4 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.reel figcaption b{font-size:15px;line-height:1.3}
+.reel figcaption small{font:400 12px/1.45 var(--mono);color:var(--mut)}
+@media (max-width:560px){.reels{grid-template-columns:minmax(0,1fr);max-width:340px}}
+.shots{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:20px;margin:24px 0 0;align-items:start}
+.shot{margin:0;border:2px solid var(--ink);background:#fff;grid-column:span 3}
+.shot-wide{grid-column:1 / -1}
+.shot-phone{grid-column:span 2}
+.shot a{display:block;background:var(--ink)}
+.shot img{display:block;width:100%;height:auto}
+.shot a:focus-visible{outline:3px solid var(--or);outline-offset:2px}
+.shot figcaption{padding:9px 12px;border-top:2px solid var(--ink);display:flex;flex-direction:column;gap:3px}
+.shot figcaption span{font:500 11px/1.4 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.shot figcaption b{font-size:15px;line-height:1.3}
+.shot figcaption small{font:400 12px/1.45 var(--mono);color:var(--mut)}
+@media (max-width:720px){.shot{grid-column:1 / -1}.shot-phone{grid-column:span 3}}

@@ -341,6 +341,173 @@
       "note": "Barcodes and lines on this page are illustrative. A tidy table where everything is off by one is more dangerous than a document that admits it could not be read."
     },
     {
+      "slug": "mofmo-collection",
+      "code": "R1-03",
+      "rack": "ops",
+      "kind": "Shopee campaign · Oct 2026",
+      "year": "2026",
+      "doc": "delivery",
+      "title": "Mofmo",
+      "titleAccent": "Collection",
+      "short": "Mofmo Collection",
+      "summary": "Every Shopee parcel carries a printed QR card. Scanning it opens the plush cards from that order, a voucher with its expiry, and a game leaderboard.",
+      "cardPoints": [
+        "**One QR card per parcel**, linked to the Shopee order at packing",
+        "**Cards follow the order**: three plush bought, three cards opened"
+      ],
+      "lede": "A loyalty layer for a plush brand that sells on Shopee. The cards are printed before anyone knows which SKUs will ship, so each card carries a blank code that the warehouse links to an order number at packing. When the buyer scans it, the server reads that order and opens one collection card per plush, plus a Shopee voucher that stays in their book until it expires.",
+      "meta": [
+        {
+          "label": "Stack",
+          "value": "Static web on Cloudflare Pages, Supabase Edge Function, Postgres"
+        },
+        {
+          "label": "Channel",
+          "value": "Shopee parcels, 11.11 edition 6 to 14 Nov 2026"
+        },
+        {
+          "label": "Built with",
+          "value": "AI pair programming, tested in Node and Playwright"
+        }
+      ],
+      "visual": "image",
+      "image": "mofmo-fig.jpg",
+      "visualCaption": "QR card in the parcel · cards and voucher on the buyer's phone",
+      "videos": [
+        {
+          "file": "mofmo-tutorial-1111.mp4",
+          "poster": "mofmo-tutorial-1111.jpg",
+          "title": "How buyers use it (11.11)",
+          "caption": "36 s tutorial reel, Bahasa Indonesia. Recorded from the live site with sample data; the voice-over is added by hand."
+        },
+        {
+          "file": "mofmo-reel-1010.mp4",
+          "poster": "mofmo-reel-1010.jpg",
+          "title": "10.10 campaign reel",
+          "caption": "31 s promo reel for the 10.10 Shopee sale."
+        }
+      ],
+      "gallery": [
+        {
+          "file": "mofmo-web-desktop.jpg",
+          "shape": "wide",
+          "title": "mofmofriends.id on desktop",
+          "caption": "The brand's storybook site. Cream and brown palette with the four-character pattern, matching the printed card and the WMS."
+        },
+        {
+          "file": "mofmo-web-hp.jpg",
+          "shape": "phone",
+          "title": "Home on a phone",
+          "caption": "Most buyers arrive by scanning the parcel card."
+        },
+        {
+          "file": "mofmo-web-koleksi.jpg",
+          "shape": "phone",
+          "title": "Buyer's card book",
+          "caption": "Cards from their orders, the voucher with days left, progress per chapter."
+        },
+        {
+          "file": "mofmo-web-game.jpg",
+          "shape": "phone",
+          "title": "Game for the leaderboard",
+          "caption": "One of three games; scores count only during the edition dates."
+        },
+        {
+          "file": "mofmo-wms-ringkas.jpg",
+          "shape": "half",
+          "title": "Kitabku dashboard in the WMS",
+          "caption": "Edition dates, live numbers and rewards. Voucher codes are pasted from Shopee Seller Centre."
+        },
+        {
+          "file": "mofmo-wms-cetak.jpg",
+          "shape": "half",
+          "title": "Print parcel cards",
+          "caption": "Blank codes generated server-side, printed in-house on A4, four cards per sheet."
+        },
+        {
+          "file": "mofmo-wms-pasang.jpg",
+          "shape": "half",
+          "title": "Link a card to an order",
+          "caption": "Backup to the warehouse Excel: scan the order number, then the card. Fixes a card linked to the wrong parcel."
+        },
+        {
+          "file": "mofmo-wms-template.jpg",
+          "shape": "half",
+          "title": "Design template archive",
+          "caption": "Card and banner files go to a Google Drive folder per edition, final versions marked."
+        }
+      ],
+      "numbers": [
+        {
+          "value": 43,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "cards in the collection"
+        },
+        {
+          "value": 3,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "games feeding one leaderboard"
+        },
+        {
+          "value": 9,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "days in the 11.11 edition"
+        }
+      ],
+      "problem": {
+        "title": "The parcel is the only touchpoint",
+        "text": "A buyer gets the plush, leaves a review and is gone. A card per product does not work either: cards are printed weeks ahead, and which SKUs go into which parcel is only known at packing."
+      },
+      "approach": {
+        "title": "Blank codes, linked at packing",
+        "text": "Print one generic QR card per parcel. At packing the warehouse links the card to the order number, from the daily Excel or a scan page in the WMS. On scan the server opens one card per plush in that order. If the order data is late, the voucher still shows and the cards follow without a second scan."
+      },
+      "result": {
+        "title": "Cards, a voucher, a reason to come back",
+        "text": "Buyers keep their cards and voucher in a book tied to a nickname, no phone number or email. Three games feed a leaderboard that closes on the last day of the edition, and the winners' vouchers are claimed from the same book."
+      },
+      "detailTitle": "What can go wrong",
+      "detailAccent": "and what the page does",
+      "details": [
+        {
+          "type": "cards",
+          "items": [
+            {
+              "title": "Order data not in yet",
+              "text": "The voucher opens straight away. The cards are marked as being prepared and appear by themselves once the order data lands."
+            },
+            {
+              "title": "Card never linked at packing",
+              "text": "The buyer types the Shopee order number. The server checks that the order exists and has no other card."
+            },
+            {
+              "title": "Same card scanned twice",
+              "text": "The second book gets a clear message. One card opens one book."
+            }
+          ]
+        }
+      ],
+      "tags": [
+        "Supabase",
+        "Postgres",
+        "Cloudflare Pages",
+        "QR",
+        "Gamification",
+        "Retail ops"
+      ],
+      "link": {
+        "label": "Open mofmofriends.id",
+        "url": "https://mofmofriends.id"
+      },
+      "note": "Names on the leaderboard and in the tutorial are sample data. Voucher codes shown are examples."
+    },
+    {
       "slug": "replenishment",
       "code": "S1-01",
       "rack": "hack",

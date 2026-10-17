@@ -87,6 +87,10 @@
                           line bars network lanes scatter clusters dashboard document image. Unknown = a generic rack map.
    image         string   only with visual "image": a filename at the site root, e.g. "myshot.jpg"
    visualCaption string   caption under the sketch
+   videos        array    optional [{file, poster, title, caption}] vertical (9:16) videos at the site root, shown side by side
+                          under the sketch with play controls. Nothing autoplays and sound stays off until the visitor plays it.
+   gallery       array    optional [{file, title, caption, shape:"wide"|"half"|"phone"}] screenshots at the site root, shown after the
+                          reels. "wide" spans the row, "half" takes half a row, "phone" a third. Each opens full size in a new tab.
    numbers       array    [{value:number, prefix:"", suffix:"%", comma:true|false, label}] count up on screen
    problem       object   {title, text}
    approach      object   {title, text}
@@ -155,6 +159,26 @@
     if (p.lede) h += '<p class="lede">' + esc(p.lede) + '</p>';
     if (p.meta && p.meta.length) { h += '<div class="meta">'; p.meta.forEach(function (m) { m = m || {}; h += '<div><small>' + esc(m.label) + '</small><span>' + esc(m.value) + '</span></div>'; }); h += '</div>'; }
     h += '<figure class="fig"><canvas data-viz="' + esc(p.visual || "") + '"' + (p.image ? ' data-image="' + esc(p.image) + '"' : "") + ' aria-hidden="true"></canvas><figcaption><span>Fig. 01 · ' + esc(p.visual || "generic") + '</span>' + esc(p.visualCaption || "") + '</figcaption></figure>';
+    if (p.videos && p.videos.length) {
+      h += '<div class="reels">';
+      p.videos.forEach(function (v, k) {
+        v = v || {}; if (!v.file) return;
+        h += '<figure class="reel"><video controls playsinline preload="none"' + (v.poster ? ' poster="' + esc(v.poster) + '"' : "") + ' aria-label="' + esc(v.title || "Video") + '"><source src="' + esc(v.file) + '" type="video/mp4"></video>' +
+          '<figcaption><span>Fig. ' + pad2(k + 1) + ' · reel</span><b>' + esc(v.title) + '</b>' + (v.caption ? '<small>' + esc(v.caption) + '</small>' : "") + '</figcaption></figure>';
+      });
+      h += '</div>';
+    }
+    if (p.gallery && p.gallery.length) {
+      var nFig = 1 + ((p.videos && p.videos.length) || 0);
+      h += '<div class="shots">';
+      p.gallery.forEach(function (g) {
+        g = g || {}; if (!g.file) return;
+        var shape = g.shape === "wide" || g.shape === "phone" ? g.shape : "half";
+        h += '<figure class="shot shot-' + shape + '"><a href="' + esc(g.file) + '" target="_blank" rel="noopener"><img src="' + esc(g.file) + '" alt="' + esc(g.title || "Screenshot") + '" loading="lazy" decoding="async"></a>' +
+          '<figcaption><span>Fig. ' + pad2(nFig++) + ' · screen</span><b>' + esc(g.title) + '</b>' + (g.caption ? '<small>' + esc(g.caption) + '</small>' : "") + '</figcaption></figure>';
+      });
+      h += '</div>';
+    }
     if (p.numbers && p.numbers.length) {
       h += '<div class="nums" aria-label="Numbers">';
       p.numbers.forEach(function (n, k) {
