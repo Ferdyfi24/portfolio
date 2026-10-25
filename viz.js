@@ -1,7 +1,7 @@
 /* Every canvas on the site, drawn from one requestAnimationFrame loop.
    Two kinds of canvas:
    - canvas[data-viz="name"]: the small animated sketch on a project card and at the top of a project page.
-     Named sketches: ledger, po, repl, basket, anom, lpg, fc, rfm, dash, fin.
+     Named sketches: ledger, po, repl, basket, anom, lpg, fc, rfm, dash, fin, release, inbox.
      Generic sketches for future projects: line, bars, network, lanes, scatter, clusters, dashboard, document, image.
      An unknown or missing name falls back to "generic", a rack map that fills and empties.
    - canvas[data-scene="hero|floor|belt"]: the background scenes. hero = racking elevation with a hoist and a conveyor
@@ -343,6 +343,113 @@
     });
   };
   D.lanes = function (c, w, h, t, S) { D.lpg(c, w, h, t, S, true); };
+
+  /* 14. Release gates: one build crosses six checks before buyers. Every run one check catches something, the build backs up,
+     gets the fix (an orange patch) and goes through again. Lamps above the gates: empty = waiting, ink = passed, orange = caught. */
+  D.release = function (c, w, h, t, S) {
+    S = Math.min(S, w / 300);
+    var big = S > 1.4 && w > 460, pad = 12 * S, names = ["TEST", "MUTATE", "REVIEW", "OWASP", "SWITCH", "WATCH"], N = names.length;
+    var endW = (big ? 66 : 44) * S, endX = w - pad - endW, x0 = pad, cw = 20 * S, ch = 14 * S;
+    var yT = h * .56, yF = yT + ch / 2 + 3 * S, yTop = yT - ch / 2 - 12 * S, gx = [], i, e;
+    for (i = 0; i < N; i++) gx.push(lerp(x0 + cw + 12 * S, endX - 14 * S, i / (N - 1)));
+    var P = 9, run = Math.floor(t / P), u = t % P, bad = [2, 3, 1, 4][run % 4];
+    /* the build's path as keyframes [t0, x0, t1, x1]; a gap between keyframes is a hold */
+    var K = [], tt = .3, cx = x0, ev = [];
+    function go(x, d) { K.push([tt, cx, tt + d, x]); tt += d; cx = x; }
+    for (i = 0; i < N; i++) {
+      var stop = gx[i] - cw - 5 * S; e = {};
+      go(stop, i ? .45 : .5); e.c0 = tt; tt += .32;
+      if (i === bad) { e.f0 = tt; tt += .4; go(stop - Math.max(4 * S, Math.min(14 * S, gx[1] - gx[0] - cw - 9 * S)), .3); e.fix = tt; tt += .35; go(stop, .3); e.c1 = tt; tt += .28; }
+      e.open = tt; ev.push(e);
+    }
+    go(endX + 4 * S, .5);
+    var tIn = tt, bx = x0;
+    for (i = 0; i < K.length; i++) { var k = K[i]; if (u >= k[0]) bx = u >= k[2] ? k[3] : lerp(k[1], k[3], ease((u - k[0]) / (k[2] - k[0]))); }
+    /* floor */
+    c.strokeStyle = INK; c.lineWidth = 1.5; line(c, x0, yF, endX, yF);
+    c.strokeStyle = RULE; c.lineWidth = 1; for (var rx = x0 + 6 * S; rx < endX; rx += 8 * S) line(c, rx, yF + 2 * S, rx - 3 * S, yF + 6 * S);
+    /* gates, lamps, names */
+    var lfs = fitMono(c, 6, gx[1] - gx[0] - 4 * S, (big ? 8.5 : 7.5) * S), ls = 7 * S, scan = false;
+    for (i = 0; i < N; i++) {
+      e = ev[i]; var g = gx[i];
+      var st = u < e.c0 ? 0 : (e.f0 != null && u >= e.f0 && u < e.open) ? 2 : u >= e.open ? 3 : 1;
+      if ((u >= e.c0 && u < e.c0 + .32) || (e.c1 != null && u >= e.c1 && u < e.open)) scan = true;
+      var op = u >= e.open ? eo((u - e.open) / .22) * (1 - sm(e.open + .5, e.open + .8, u)) : 0, L = yF - yTop;
+      c.strokeStyle = MUT; c.lineWidth = 1; line(c, g - 5 * S, yTop, g + 5 * S, yTop);
+      c.strokeStyle = st === 2 ? OR : INK; c.lineWidth = 3 * S; line(c, g, yTop, g, yF - 1 - (L - 2 * S) * op);
+      var lx = g - ls / 2, ly = yTop - 9 * S - ls / 2;
+      if (st === 0) { c.fillStyle = WHITE; c.fillRect(lx, ly, ls, ls); c.strokeStyle = MUT; c.lineWidth = 1; c.strokeRect(lx, ly, ls, ls); }
+      else if (st === 1) { c.fillStyle = alpha(INK, .25 + .5 * (.5 + .5 * Math.sin(u * 28))); c.fillRect(lx, ly, ls, ls); }
+      else if (st === 2) { c.fillStyle = OR; c.fillRect(lx, ly, ls, ls); c.strokeStyle = WHITE; c.lineWidth = 1.4; line(c, lx + 2 * S, ly + 2 * S, lx + ls - 2 * S, ly + ls - 2 * S); line(c, lx + ls - 2 * S, ly + 2 * S, lx + 2 * S, ly + ls - 2 * S); }
+      else { c.fillStyle = INK; c.fillRect(lx, ly, ls, ls); c.strokeStyle = WHITE; c.lineWidth = 1.4; c.beginPath(); c.moveTo(lx + 1.6 * S, ly + ls * .52); c.lineTo(lx + ls * .42, ly + ls - 1.8 * S); c.lineTo(lx + ls - 1.4 * S, ly + 1.8 * S); c.stroke(); }
+      txt(c, names[i], g, yF + 12 * S, lfs, st === 3 ? INK : st === 2 ? OR : MUT, "center");
+    }
+    /* buyers */
+    var bt = yTop - 2 * S;
+    c.fillStyle = INK; c.fillRect(endX, bt, endW, yF - bt);
+    txt(c, "BUYERS", endX + endW / 2, (bt + yF) / 2, fitMono(c, 6, endW - 8 * S, 8.5 * S), WHITE, "center", MONO, 500);
+    if (u >= tIn && u < tIn + .7) { c.globalAlpha = 1 - (u - tIn) / .7; c.strokeStyle = OR; c.lineWidth = 3; c.strokeRect(endX - 3, bt - 3, endW + 6, yF - bt + 6); c.globalAlpha = 1; }
+    /* the build */
+    var ba = sm(0, .3, u) * (1 - sm(tIn - .15, tIn + .05, u)), bb = ev[bad], by = yT - ch / 2;
+    if (ba > .01) {
+      c.globalAlpha = ba;
+      c.fillStyle = (u >= bb.f0 && u < bb.fix) ? OR : WHITE; c.fillRect(bx, by, cw, ch);
+      carton(c, bx, by, cw, ch, INK, 1.5);
+      if (u >= bb.fix) { c.fillStyle = OR; c.fillRect(bx + 2 * S, by + ch * .45, cw * .34, ch * .4); }
+      if (scan) { var sx = bx + cw * ((u * 2.6) % 1); c.strokeStyle = OR; c.lineWidth = 1.5; line(c, sx, by - 3 * S, sx, by + ch + 3 * S); }
+      if (u >= bb.f0 && u < bb.open) { var tg = u < bb.fix ? "caught" : "fixed", tp = 7.5 * S; tag(c, tg, bx + cw / 2 - tw(c, tg, tp) / 2, by - 10 * S, tp, OR); }
+      c.globalAlpha = 1;
+    }
+    /* counters */
+    var fs = (big ? 9 : 7.5) * S, ty = pad + 2 * S;
+    txt(c, "release " + (run + 39), x0, ty, fs, MUT);
+    if (u >= bb.f0) txt(c, "caught at " + names[bad], endX + endW, ty, fs, OR, "right");
+    txt(c, (run + 38 + (u >= tIn ? 1 : 0)) + " shipped", endX + endW / 2, bt - 9 * S, fs, INK, "center");
+  };
+
+  /* 15. Partner inbox agent: threads drop into the agent, which turns each one into a draft (orange: a person sends it),
+     a task with a date, or a nudge after three quiet days. Three trays fill, then clear. */
+  D.inbox = function (c, w, h, t, S) {
+    S = Math.min(S, w / 300);
+    var big = S > 1.4 && w > 460, pad = 12 * S, iw = 16 * S, ih = 11 * S, SL = 1.7, TY = ["d", "t", "d", "n", "t", "d", "t", "n"], M = TY.length;
+    var aT = h * .3, aH = 22 * S, aL = w * .5 - Math.min(w * .3, 110 * S), aR = w * .5 + Math.min(w * .3, 110 * S), base = h - pad - 14 * S;
+    var cols = { d: w * .5 - Math.min(w * .27, 120 * S), t: w * .5, n: w * .5 + Math.min(w * .27, 120 * S) };
+    var lab = { d: "DRAFT", t: "TASK", n: "NUDGE" };
+    var n = Math.floor(t / SL), s = t % SL, cyc = Math.floor(n / M), slot = n % M, ty = TY[slot], cycT = t % (SL * M);
+    function env(x, y, col, fill) { c.fillStyle = fill || WHITE; c.fillRect(x, y, iw, ih); c.strokeStyle = col; c.lineWidth = 1.4; c.strokeRect(x, y, iw, ih); c.beginPath(); c.moveTo(x, y); c.lineTo(x + iw / 2, y + ih * .55); c.lineTo(x + iw, y); c.stroke(); }
+    function icon(k, x, y) {
+      if (k === "d") { env(x, y, OR); c.strokeStyle = OR; c.lineWidth = 1.4; line(c, x + iw * .62, y + ih * .95, x + iw * 1.05, y + ih * .35); }
+      else if (k === "t") { c.fillStyle = WHITE; c.fillRect(x, y, iw, ih); c.strokeStyle = INK; c.lineWidth = 1.4; c.strokeRect(x, y, iw, ih); c.beginPath(); c.moveTo(x + iw * .28, y + ih * .52); c.lineTo(x + iw * .45, y + ih * .78); c.lineTo(x + iw * .74, y + ih * .24); c.stroke(); }
+      else { var r = ih * .5; c.fillStyle = WHITE; circle(c, x + iw / 2, y + ih / 2, r); c.fill(); c.strokeStyle = INK; c.lineWidth = 1.4; c.stroke(); line(c, x + iw / 2, y + ih / 2, x + iw / 2, y + ih / 2 - r * .7); line(c, x + iw / 2, y + ih / 2, x + iw / 2 + r * .55, y + ih / 2); }
+    }
+    /* trays: what has landed this cycle */
+    var fade = 1 - sm(SL * M - .5, SL * M, cycT), got = { d: 0, t: 0, n: 0 };
+    for (var j = 0; j < slot; j++) got[TY[j]]++;
+    if (s >= 1.15) got[ty]++;
+    ["d", "t", "n"].forEach(function (k) {
+      var x = cols[k];
+      c.strokeStyle = INK; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x - iw * .9, base - 6 * S); c.lineTo(x - iw * .9, base); c.lineTo(x + iw * .9, base); c.lineTo(x + iw * .9, base - 6 * S); c.stroke();
+      c.globalAlpha = fade; for (var q = 0; q < got[k]; q++) icon(k, x - iw / 2, base - 3 * S - (q + 1) * (ih + 3 * S)); c.globalAlpha = 1;
+      txt(c, lab[k], x, base + 9 * S, (big ? 8.5 : 7.5) * S, k === "d" ? OR : INK, "center", MONO, 500);
+    });
+    if (big) txt(c, "a person sends", cols.d, base + 20 * S, 7.5 * S, MUT, "center");
+    /* agent */
+    var reading = s >= .55 && s < .85;
+    c.fillStyle = INK; c.fillRect(aL, aT, aR - aL, aH);
+    txt(c, big ? "AGENT · reads the thread" : "AGENT", w / 2, aT + aH / 2, (big ? 8.5 : 8) * S, WHITE, "center", MONO, 500);
+    if (reading) { c.fillStyle = OR; c.fillRect(aL, aT + aH - 3 * S, (aR - aL) * sm(.55, .85, s), 3 * S); }
+    /* the mail coming in, and what goes out */
+    var r = rng(cyc * 31 + slot * 7 + 3), sx = lerp(aL + iw, aR - iw * 2, r());
+    if (s < .55) { var p = ease(s / .55); c.globalAlpha = sm(0, .1, s); env(lerp(sx, w / 2 - iw / 2, p), lerp(-ih - 2, aT - ih - 2 * S, p), INK); c.globalAlpha = 1; }
+    if (s >= .85 && s < 1.15) {
+      var q2 = ease((s - .85) / .3), tx = cols[ty] - iw / 2, tyy = base - 3 * S - (got[ty] + 1) * (ih + 3 * S);
+      icon(ty, lerp(w / 2 - iw / 2, tx, q2), lerp(aT + aH + 2 * S, tyy, q2) - Math.sin(q2 * Math.PI) * 6 * S);
+    }
+    /* queue waiting at the top left, and the count */
+    var fs = (big ? 9 : 7.5) * S;
+    txt(c, big ? "partner threads" : "threads", pad, pad + 2 * S, fs, MUT);
+    txt(c, "handled " + (n + 140 + (s >= 1.15 ? 1 : 0)), w - pad, pad + 2 * S, fs, INK, "right");
+  };
 
   /* 7. Forecast: actual demand and three methods, then a three-month projection. generic = "line" */
   var FC = null;

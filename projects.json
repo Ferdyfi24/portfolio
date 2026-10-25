@@ -537,7 +537,7 @@
           "value": "Partner threads under one Gmail label"
         }
       ],
-      "visual": "network",
+      "visual": "inbox",
       "visualCaption": "OPS · inbox to task",
       "numbers": [
         {
@@ -683,7 +683,7 @@
           "value": "Every release"
         }
       ],
-      "visual": "lanes",
+      "visual": "release",
       "visualCaption": "RELEASE · gates before buyers",
       "numbers": [
         {
