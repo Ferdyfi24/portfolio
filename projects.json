@@ -508,6 +508,312 @@
       "note": "Names on the leaderboard and in the tutorial are sample data. Voucher codes shown are examples."
     },
     {
+      "slug": "partner-inbox-agent",
+      "code": "R1-04",
+      "rack": "ops",
+      "kind": "Live at work · Oct 2026",
+      "year": "2026",
+      "doc": "delivery",
+      "title": "Partner inbox",
+      "titleAccent": "agent",
+      "short": "Partner inbox agent",
+      "summary": "An AI agent watches every partner email thread, drafts the reply, and turns what the partner agreed to into a task. It never sends anything by itself.",
+      "cardPoints": [
+        "Checks partner threads **every 5 minutes**, drafts on the hour",
+        "Drafts only: **a person presses send**"
+      ],
+      "lede": "Retail partners reply by email at any hour, and the promises in those emails used to live only in one inbox. This agent reads the threads, prepares the reply, drafts a follow-up after three working days of silence, and records every agreement so it becomes a task with a date.",
+      "meta": [
+        {
+          "label": "Stack",
+          "value": "Claude scheduled tasks, Gmail, Apps Script, Supabase Edge Functions, ClickUp API"
+        },
+        {
+          "label": "Surface",
+          "value": "Installable phone app with push notifications"
+        },
+        {
+          "label": "Scope",
+          "value": "Partner threads under one Gmail label"
+        }
+      ],
+      "visual": "network",
+      "visualCaption": "OPS · inbox to task",
+      "numbers": [
+        {
+          "value": 5,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "minutes between inbox checks"
+        },
+        {
+          "value": 3,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "working days of silence before a follow-up is drafted"
+        },
+        {
+          "value": 148,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "automated checks on the app and its server"
+        }
+      ],
+      "problem": {
+        "title": "Promises lived in an inbox",
+        "text": "A partner agrees to a stock count on Tuesday at 08.30 in the third paragraph of a reply. If nobody turns that into a task, the field team hears about it too late. Replies also waited, because writing a formal email took longer than the decision behind it."
+      },
+      "approach": {
+        "title": "Draft, never send",
+        "text": "A scheduled AI task reads each watched thread every hour. When the partner has replied, it drafts the answer in formal retail Indonesian. When we are the ones waiting, it drafts a follow-up after three working days. Every agreement and scheduled visit goes into a table, and the phone app offers one tap to turn it into a ClickUp task or a calendar event."
+      },
+      "result": {
+        "title": "A person stays the sender",
+        "text": "The phone buzzes with \"partner replied, draft ready\". From there: read it, ask for a revision in plain words, or press send. When the task that came from an agreement is marked done, a confirmation to the partner is drafted in the same thread."
+      },
+      "detailTitle": "Rules the agent",
+      "detailAccent": "cannot break",
+      "details": [
+        {
+          "type": "cards",
+          "items": [
+            {
+              "title": "It never sends email",
+              "text": "Drafts only. Sending happens from the app or from Gmail, by a person.",
+              "fix": "Written into the task, and enforced by the server: a send is refused if the draft changed or belongs to another thread."
+            },
+            {
+              "title": "Old drafts do not count",
+              "text": "A draft written before the partner's latest message answers the wrong thing.",
+              "fix": "Only drafts newer than the latest partner message count as ready."
+            },
+            {
+              "title": "A colleague is not the partner",
+              "text": "An internal reply inside a partner thread looked like the partner had answered.",
+              "fix": "Turn tracking ignores internal addresses."
+            },
+            {
+              "title": "No invented dates",
+              "text": "A test caught an undated agreement turning into a deadline of 1 January 1970.",
+              "fix": "Undated means no deadline, and the notification says so."
+            }
+          ]
+        },
+        {
+          "type": "table",
+          "columns": [
+            "Event",
+            "Phone notification"
+          ],
+          "rows": [
+            [
+              "01",
+              "Partner replies",
+              "Partner replied"
+            ],
+            [
+              "02",
+              "Draft prepared",
+              "Reply to partner · draft ready"
+            ],
+            [
+              "03",
+              "Three working days without an answer",
+              "Follow-up ready"
+            ],
+            [
+              "04",
+              "Partner agrees to a visit with a time",
+              "Agenda from partner: stock count 08.30"
+            ],
+            [
+              "05",
+              "The agreed task is marked done",
+              "Confirmation to partner ready"
+            ]
+          ]
+        },
+        {
+          "type": "callout",
+          "title": "Same app, warehouse data too.",
+          "text": "The home screen also shows today's field visit and whether the store report came in, store stock running low by days of cover, and marketplace orders still unshipped after two days. It reads a WMS mirror that refreshes every ten minutes."
+        }
+      ],
+      "tags": [
+        "AI agents",
+        "Automation",
+        "Gmail",
+        "Supabase",
+        "ClickUp",
+        "PWA"
+      ],
+      "link": null,
+      "note": "Partner names, people and message contents are not shown. The agent runs on real partner threads at work."
+    },
+    {
+      "slug": "shipping-with-ai",
+      "code": "R1-05",
+      "rack": "ops",
+      "kind": "Release routine · Oct 2026",
+      "year": "2026",
+      "doc": "count",
+      "title": "Shipping with AI,",
+      "titleAccent": "safely",
+      "short": "Shipping with AI, safely",
+      "summary": "How a buyer-facing system used by kids gets built with AI without trusting the AI: tests that must fail first, a second reviewer, a security pass, and features switched on in stages.",
+      "cardPoints": [
+        "**2,100+ automated checks**, each new one proven able to fail",
+        "A second review of the fix caught **a regression before deploy**"
+      ],
+      "lede": "Most of the code in these systems was written with AI help. That makes the checking the real work. This is the routine every release goes through before it reaches buyers, many of them children.",
+      "meta": [
+        {
+          "label": "Applies to",
+          "value": "WMS, Mofmo Collection, partner inbox agent"
+        },
+        {
+          "label": "Tools",
+          "value": "Node test runners, Playwright, Postgres, Supabase"
+        },
+        {
+          "label": "Cadence",
+          "value": "Every release"
+        }
+      ],
+      "visual": "lanes",
+      "visualCaption": "RELEASE · gates before buyers",
+      "numbers": [
+        {
+          "value": 2100,
+          "prefix": "",
+          "suffix": "+",
+          "comma": true,
+          "label": "automated checks across 158 test files"
+        },
+        {
+          "value": 28,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "feature switches, all off at deploy"
+        },
+        {
+          "value": 45,
+          "prefix": "",
+          "suffix": "",
+          "comma": false,
+          "label": "code mutations in one release, each turned the tests red"
+        }
+      ],
+      "problem": {
+        "title": "Generated code looks finished",
+        "text": "AI writes code that reads clean and passes the happy path. The failures hide in the cases nobody typed in: a server that never answers, a card scanned twice, a message written to slip past a filter."
+      },
+      "approach": {
+        "title": "Make every claim prove itself",
+        "text": "A test is written before the fix and has to be seen failing. Then the fix is broken on purpose, one line at a time, and the test must turn red each time. A separate review agent reads the change without my reasoning attached. Before a big campaign, a security pass goes through the OWASP list."
+      },
+      "result": {
+        "title": "Caught before buyers saw it",
+        "text": "The security pass before the 11.11 campaign found two high and four medium issues, fixed and deployed the same night. The independent review of that fix then found the fix's own bug: one failing phone could have made every buyer get the same notification every five minutes. It was fixed and tested before deploy."
+      },
+      "detailTitle": "The gates",
+      "detailAccent": "every release passes",
+      "details": [
+        {
+          "type": "table",
+          "columns": [
+            "Gate",
+            "What it catches"
+          ],
+          "rows": [
+            [
+              "01",
+              "Test first, seen failing",
+              "A test that has never failed proves nothing"
+            ],
+            [
+              "02",
+              "Mutation pass",
+              "Tests that stay green with the code broken"
+            ],
+            [
+              "03",
+              "Independent review",
+              "Mistakes the author is anchored on"
+            ],
+            [
+              "04",
+              "Security pass (OWASP)",
+              "Access, injection, abuse, child safety"
+            ],
+            [
+              "05",
+              "Feature switches",
+              "Off at deploy, then staff only, then everyone in waves"
+            ],
+            [
+              "06",
+              "Daily monitoring",
+              "Errors, quota and blocks during the campaign"
+            ]
+          ]
+        },
+        {
+          "type": "cards",
+          "items": [
+            {
+              "title": "Old database functions open to the public key",
+              "text": "Two stock functions could be called by anyone holding the public key. Query statistics showed nobody had.",
+              "fix": "Execute and table rights revoked from public roles, defaults changed so new objects start closed."
+            },
+            {
+              "title": "Filters beaten by a digit or an exclamation mark",
+              "text": "Player names and greeting cards are shown to other kids. Swapping letters for digits, or adding \"!\", got insults through.",
+              "fix": "Map digits before stripping, strip punctuation first, refuse chat app handles and spelled-out phone numbers."
+            },
+            {
+              "title": "Blocking covered one screen",
+              "text": "A blocked player could still send cards and requests, each one a notification on a child's phone.",
+              "fix": "Blocks cover cards, requests and search, with the same answer as \"ID not found\". Social notifications are capped per day."
+            },
+            {
+              "title": "A leaderboard read from part of a table",
+              "text": "The ranking query was silently cut at 1,000 rows, so prizes could reach the wrong players after about 334 buyers.",
+              "fix": "Paged reads in a stable order, one row per player and game."
+            }
+          ]
+        },
+        {
+          "type": "callout",
+          "title": "Mutation pass, real output.",
+          "text": "After the fixes, each one is undone in turn. Every line below had to turn the suite red:"
+        },
+        {
+          "type": "code",
+          "text": "17 checks, all passing\nred  push host allowlist removed\nred  dedupe key written before sending\nred  digit mapping removed from the name filter\nred  block check removed from card requests\nred  daily notification cap removed"
+        },
+        {
+          "type": "callout",
+          "title": "Switches, not big bangs.",
+          "text": "28 switches live in the WMS. A release ships with every new feature off, so deploying changes nothing a buyer can see. Staff try it on three phones, then features reach everyone in three waves before the campaign, and one button turns all new features off."
+        }
+      ],
+      "tags": [
+        "Testing",
+        "Mutation testing",
+        "Security",
+        "OWASP",
+        "Feature flags",
+        "AI-assisted development"
+      ],
+      "link": null,
+      "note": "Findings are described by what went wrong and how it was fixed, not how to repeat it. All were fixed before the campaign opened to buyers."
+    },
+    {
       "slug": "replenishment",
       "code": "S1-01",
       "rack": "hack",
